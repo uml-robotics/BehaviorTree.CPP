@@ -43,13 +43,12 @@ TreeNode* SequenceNode::getNextSibling(TreeNode* child) {
 
 NodeStatus SequenceNode::tick()
 {
-    const size_t children_count = children_nodes_.size();
-
     setStatus(NodeStatus::RUNNING);
 
-    while (current_child_idx_ < children_count)
-    {
-        TreeNode* current_child_node = children_nodes_[current_child_idx_];
+    TreeNode* current_child_node = children_nodes_[0];
+
+    do {
+
         const NodeStatus child_status = current_child_node->executeTick();
 
         switch (child_status)
@@ -75,15 +74,13 @@ NodeStatus SequenceNode::tick()
             {
                 throw LogicError("A child node must never return IDLE");
             }
-        }   // end switch
-    }       // end while loop
+        }
+    } while((current_child_node = getNextSibling(current_child_node)) != nullptr);
 
     // The entire while loop completed. This means that all the children returned SUCCESS.
-    if (current_child_idx_ == children_count)
-    {
-        haltChildren(0);
-        current_child_idx_ = 0;
-    }
+    haltChildren(0);
+    current_child_idx_ = 0;
+
     return NodeStatus::SUCCESS;
 }
 
