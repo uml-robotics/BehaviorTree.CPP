@@ -43,6 +43,8 @@ class SequenceNode : public ControlNode
   private:
     size_t current_child_idx_;
 
+    TreeNode* getNextSibling(TreeNode* child);
+
     virtual BT::NodeStatus tick() override;
 };
 
