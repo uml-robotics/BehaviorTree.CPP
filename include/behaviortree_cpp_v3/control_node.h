@@ -32,6 +32,8 @@ class ControlNode : public TreeNode
     /// The method used to add nodes to the children vector
     void addChild(TreeNode* child);
 
+    void insertChildAfter(TreeNode* child, TreeNode* sibling);
+
     size_t childrenCount() const;
 
     const std::vector<TreeNode*>& children() const;

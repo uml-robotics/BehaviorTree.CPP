@@ -25,6 +25,12 @@ void ControlNode::addChild(TreeNode* child)
     children_nodes_.push_back(child);
 }
 
+void ControlNode::insertChildAfter(TreeNode* child, TreeNode* sibling) {
+    std::cout << "Before: " << children_nodes_.size();
+    children_nodes_.insert(std::find(std::begin(children_nodes_), std::end(children_nodes_), sibling) + 1, child);
+    std::cout << "After: " << children_nodes_.size();
+}
+
 size_t ControlNode::childrenCount() const
 {
     return children_nodes_.size();
