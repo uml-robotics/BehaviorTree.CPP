@@ -27,8 +27,8 @@ void StdCoutLogger::callback(Duration timestamp, const TreeNode& node, NodeStatu
 
     double since_epoch = duration<double>(timestamp).count();
     printf("[%.3f]: %s%s %s -> %s",
-           since_epoch, node.name().c_str(),
-           &whitespaces[std::min(ws_count, node.name().size())],
+           since_epoch, node.short_description().c_str(),
+           &whitespaces[std::min(ws_count, node.short_description().size())],
            toStr(prev_status, true).c_str(),
            toStr(status, true).c_str() );
     std::cout << std::endl;

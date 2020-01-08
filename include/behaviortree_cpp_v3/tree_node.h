@@ -156,6 +156,14 @@ class TreeNode
         return parent_;
     }
 
+    std::string short_description() const {
+        std::string str = name();
+        if (str.empty()) {
+            str = registration_ID_;
+        }
+        return str;
+    }
+
   protected:
     /// Method to be implemented by the user
     virtual BT::NodeStatus tick() = 0;
