@@ -148,6 +148,14 @@ class TreeNode
 
     static Optional<StringView> getRemappedKey(StringView port_name, StringView remapping_value);
 
+    void setParent(TreeNode *parent) {
+        parent_ = parent;
+    }
+
+    TreeNode* getParent() {
+        return parent_;
+    }
+
   protected:
     /// Method to be implemented by the user
     virtual BT::NodeStatus tick() = 0;
@@ -164,6 +172,8 @@ class TreeNode
 
   private:
     const std::string name_;
+
+    TreeNode *parent_;
 
     NodeStatus status_;
 
