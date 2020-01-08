@@ -15,6 +15,56 @@
 
 namespace BT
 {
+
+void applyRecursiveVisitorSelectively(const TreeNode* node, const std::function<bool(const TreeNode*)>& visitor)
+{
+    if (!node)
+    {
+        throw LogicError("One of the children of a DecoratorNode or ControlNode is nulltr");
+    }
+
+    if(visitor(node)) {
+        return;
+    }
+
+    if (auto control = dynamic_cast<const BT::ControlNode*>(node))
+    {
+        for (const auto& child : control->children())
+        {
+            applyRecursiveVisitorSelectively(static_cast<const TreeNode*>(child), visitor);
+        }
+    }
+    else if (auto decorator = dynamic_cast<const BT::DecoratorNode*>(node))
+    {
+        applyRecursiveVisitorSelectively(decorator->child(), visitor);
+    }
+}
+
+void applyRecursiveVisitorSelectively(TreeNode* node, const std::function<bool(TreeNode*)>& visitor)
+{
+    if (!node)
+    {
+        throw LogicError("One of the children of a DecoratorNode or ControlNode is nulltr");
+    }
+
+    if(visitor(node)) {
+        return;
+    }
+
+    if (auto control = dynamic_cast<BT::ControlNode*>(node))
+    {
+        for (const auto& child : control->children())
+        {
+            applyRecursiveVisitorSelectively(child, visitor);
+        }
+    }
+    else if (auto decorator = dynamic_cast<BT::DecoratorNode*>(node))
+    {
+        applyRecursiveVisitorSelectively(decorator->child(), visitor);
+    }
+}
+
+
 void applyRecursiveVisitor(const TreeNode* node,
                            const std::function<void(const TreeNode*)>& visitor)
 {
@@ -74,7 +124,7 @@ void printTreeRecursively(const TreeNode* root_node)
             std::cout << "!nullptr!" << std::endl;
             return;
         }
-        std::cout << node->name() << std::endl;
+        std::cout << node->short_description() << std::endl;
         indent++;
 
         if (auto control = dynamic_cast<const BT::ControlNode*>(node))
