@@ -135,6 +135,17 @@ public:
     /**
     * @brief registerSimpleAction help you register nodes of type SimpleActionNode.
     *
+    * @param ID                 registration ID
+    * @param tick_bool_functor  the callback to be wrapped with NodeStatus return type (true: SUCCESS, false: FAILURE) and invoked in the tick() method.
+    * @param ports              if your SimpleNode requires ports, provide the list here.
+    *
+    * */
+    void registerSimpleAction(const std::string& ID,
+                              const std::function<bool(TreeNode&)>& tick_bool_functor,
+                              PortsList ports = {});
+    /**
+    * @brief registerSimpleAction help you register nodes of type SimpleActionNode.
+    *
     * @param ID            registration ID
     * @param tick_functor  the callback to be invoked in the tick() method.
     * @param ports         if your SimpleNode requires ports, provide the list here.
@@ -143,6 +154,17 @@ public:
     void registerSimpleAction(const std::string& ID,
                               const SimpleActionNode::TickFunctor& tick_functor,
                               PortsList ports = {});
+    /**
+    * @brief registerSimpleCondition help you register nodes of type SimpleConditionNode.
+    *
+    * @param ID            registration ID
+    * @param tick_bool_functor  the callback to be wrapped with NodeStatus return type (true: SUCCESS, false: FAILURE) and invoked in the tick() method.
+    * @param ports         if your SimpleNode requires ports, provide the list here.
+    *
+    * */
+    void registerSimpleCondition(const std::string &ID,
+                                 const std::function<bool(TreeNode &)> &tick_bool_functor,
+                                 PortsList ports = {});
     /**
     * @brief registerSimpleCondition help you register nodes of type SimpleConditionNode.
     *
