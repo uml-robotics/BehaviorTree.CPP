@@ -28,6 +28,7 @@ void DecoratorNode::setChild(TreeNode* child)
     }
 
     child_node_ = child;
+    child->setParent(this);
 }
 
 void DecoratorNode::halt()

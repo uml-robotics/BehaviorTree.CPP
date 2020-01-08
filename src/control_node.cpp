@@ -23,6 +23,7 @@ ControlNode::ControlNode(const std::string& name, const NodeConfiguration& confi
 void ControlNode::addChild(TreeNode* child)
 {
     children_nodes_.push_back(child);
+    child->setParent(this);
 }
 
 void ControlNode::insertChildAfter(TreeNode* child, TreeNode* sibling) {
