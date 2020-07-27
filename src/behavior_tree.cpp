@@ -154,6 +154,7 @@ bool findTreeNodeRecursively(unsigned indent, const TreeNode* node, const std::f
     if (!node)
     {
         std::cout << "!nullptr!" << std::endl;
+        return false;
     }
 
     indent++;
