@@ -58,7 +58,7 @@ void applyRecursiveVisitor(TreeNode* root_node, const std::function<void(TreeNod
  * Debug function to print on screen the hierarchy of the tree.
  */
 void printTreeRecursively(const TreeNode* root_node);
-
+bool findTreeNodeRecursively(unsigned indent, const TreeNode* node, const std::function<bool(const TreeNode*)>& name_checker);
 /// Invoke AsyncActionNode::stopAndJoinThread() to the entire tree,
 /// when needed.
 void haltAllActions(TreeNode* root_node);

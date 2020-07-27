@@ -31,7 +31,7 @@ static const char* xml_text = R"(
                 <Condition ID="IsDoorOpen"/>
             </Inverter>
             <RetryUntilSuccesful num_attempts="4">
-                <OpenDoor/>
+                <OpenDoor name = "open_door"/>
             </RetryUntilSuccesful>
             <PassThroughDoor/>
         </Sequence>
@@ -47,7 +47,8 @@ static const char* xml_text = R"(
                 <SubTree ID="DoorClosed"/>
                 <PassThroughWindow/>
             </Fallback>
-            <CloseDoor/>
+            <CloseDoor name = "close_door"/>
+            <OpenDoor/>
         </Sequence>
     </BehaviorTree>
     <!---------------------------------------> 
@@ -76,7 +77,21 @@ int main(int argc, char** argv)
     PublisherZMQ publisher_zmq(tree);
 #endif
 
-    printTreeRecursively(tree.root_node);
+    //printTreeRecursively(tree.root_node);
+    const std::string name_to_find = "close_door";
+    auto name_checker = [&name_to_find](const TreeNode* node) -> bool {
+      std::cout<<node->name()<<std::endl;
+      if (node->name() == name_to_find)
+      {
+          return true;
+      }
+      else
+      {
+          return false;
+      }
+    };
+
+    findTreeNodeRecursively(0, tree.root_node, name_checker);
 
     const bool LOOP = ( argc == 2 && strcmp( argv[1], "loop") == 0);
 

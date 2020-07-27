@@ -145,6 +145,42 @@ void printTreeRecursively(const TreeNode* root_node)
     std::cout << "----------------" << std::endl;
 }
 
+bool findTreeNodeRecursively(unsigned indent, const TreeNode* node, const std::function<bool(const TreeNode*)>& name_checker){
+
+    for (unsigned i = 0; i < indent; i++)
+    {
+        std::cout << "   ";
+    }
+    if (!node)
+    {
+        std::cout << "!nullptr!" << std::endl;
+    }
+
+    indent++;
+
+    if(name_checker(node) == true){
+        return true;
+    }
+
+    if (auto control = dynamic_cast<const ControlNode*>(node))
+    {
+        for (const auto& child : control->children())
+        {
+            if(findTreeNodeRecursively(indent, child, name_checker)){
+                return true;
+            }
+        }
+    }
+    else if (auto decorator = dynamic_cast<const DecoratorNode*>(node))
+    {
+        if(findTreeNodeRecursively(indent, decorator->child(), name_checker)){
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void buildSerializedStatusSnapshot(TreeNode* root_node, SerializedTreeStatus& serialized_buffer)
 {
     serialized_buffer.clear();

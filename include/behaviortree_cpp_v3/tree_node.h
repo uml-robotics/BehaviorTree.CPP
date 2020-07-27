@@ -49,12 +49,13 @@ struct NodeConfiguration
     PortsRemapping output_ports;
 };
 
-///adding a custom which is doing nothing
+
 class DoNothing{
 public:
     DoNothing(){
     }
 };
+
 
 /// Abstract base class for Behavior Tree Nodes
 class TreeNode
