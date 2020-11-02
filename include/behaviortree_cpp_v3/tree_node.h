@@ -82,6 +82,8 @@ class TreeNode
 
     void setStatus(NodeStatus new_status);
 
+    bool has_failed() const;
+
     /// Name of the instance, not the type
     const std::string& name() const;
 
@@ -152,7 +154,7 @@ class TreeNode
         parent_ = parent;
     }
 
-    TreeNode* getParent() {
+    TreeNode* getParent() const {
         return parent_;
     }
 
@@ -184,6 +186,8 @@ class TreeNode
     TreeNode *parent_;
 
     NodeStatus status_;
+
+    bool failed_ = false;
 
     std::condition_variable state_condition_variable_;
 

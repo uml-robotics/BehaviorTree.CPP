@@ -44,6 +44,10 @@ void TreeNode::setStatus(NodeStatus new_status)
         std::unique_lock<std::mutex> UniqueLock(state_mutex_);
         prev_status = status_;
         status_ = new_status;
+
+        if (status_ == NodeStatus::FAILURE) {
+            this->failed_ = true;
+        }
     }
     if (prev_status != new_status)
     {
@@ -57,6 +61,10 @@ NodeStatus TreeNode::status() const
 {
     std::lock_guard<std::mutex> lock(state_mutex_);
     return status_;
+}
+
+bool TreeNode::has_failed() const {
+    return failed_;
 }
 
 NodeStatus TreeNode::waitValidStatus()
