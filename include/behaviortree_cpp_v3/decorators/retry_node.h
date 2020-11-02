@@ -52,6 +52,14 @@ class RetryNode : public DecoratorNode
 
     virtual void halt() override;
 
+    bool is_retrying() const {
+        return try_index_ > 0;
+    }
+
+    int n_th_retry() const {
+        return try_index_;
+    }
+
   private:
     int max_attempts_;
     int try_index_;
