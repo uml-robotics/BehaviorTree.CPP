@@ -19,6 +19,7 @@
 #include "behaviortree_cpp_v3/controls/reactive_fallback.h"
 #include "behaviortree_cpp_v3/controls/fallback_node.h"
 #include "behaviortree_cpp_v3/controls/sequence_node.h"
+#include "behaviortree_cpp_v3/controls/checker_sequence_node.h"
 #include "behaviortree_cpp_v3/controls/sequence_star_node.h"
 
 #include "behaviortree_cpp_v3/action_node.h"

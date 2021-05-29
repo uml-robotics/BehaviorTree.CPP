@@ -151,6 +151,7 @@ list(APPEND BT_SOURCE
     src/controls/reactive_sequence.cpp
     src/controls/reactive_fallback.cpp
     src/controls/sequence_node.cpp
+    src/controls/checker_sequence_node.cpp
     src/controls/sequence_star_node.cpp
 
     src/loggers/bt_cout_logger.cpp

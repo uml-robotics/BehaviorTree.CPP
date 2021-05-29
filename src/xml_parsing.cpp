@@ -319,6 +319,14 @@ void VerifyXML(const std::string& xml_text,
                                    "A Control node must have at least 1 child");
             }
         }
+        else if (StrEqual(name, "CheckerSequence"))
+        {
+            if (children_count < 3)
+            {
+               ThrowError(node->GetLineNum(),
+                                   "A CheckerSequence node must have at least 3 children");
+            }
+        }
         else if (StrEqual(name, "SubTree"))
         {
             for (auto child = node->FirstChildElement(); child != nullptr;
