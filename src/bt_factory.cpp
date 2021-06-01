@@ -85,7 +85,7 @@ void BehaviorTreeFactory::registerSimpleCondition(const std::string& ID,
         return tick_bool_functor(parent_node) ? NodeStatus::SUCCESS : NodeStatus::FAILURE;
     };
 
-    registerSimpleAction(ID, tick_functor, ports);
+    registerSimpleCondition(ID, tick_functor, ports);
 }
 
 void BehaviorTreeFactory::registerSimpleCondition(const std::string& ID,
