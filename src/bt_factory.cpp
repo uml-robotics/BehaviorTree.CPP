@@ -1,4 +1,3 @@
-
 /*  Copyright (C) 2018-2019 Davide Faconti, Eurecat -  All Rights Reserved
 *
 *   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
@@ -21,7 +20,6 @@ BehaviorTreeFactory::BehaviorTreeFactory()
 {
     registerNodeType<FallbackNode>("Fallback");
     registerNodeType<SequenceNode>("Sequence");
-    registerNodeType<CheckerSequenceNode>("CheckerSequence");
     registerNodeType<SequenceStarNode>("SequenceStar");
     registerNodeType<ParallelNode>("Parallel");
     registerNodeType<ReactiveSequence>("ReactiveSequence");
@@ -87,7 +85,7 @@ void BehaviorTreeFactory::registerSimpleCondition(const std::string& ID,
         return tick_bool_functor(parent_node) ? NodeStatus::SUCCESS : NodeStatus::FAILURE;
     };
 
-    registerSimpleCondition(ID, tick_functor, ports);
+    registerSimpleAction(ID, tick_functor, ports);
 }
 
 void BehaviorTreeFactory::registerSimpleCondition(const std::string& ID,
