@@ -30,7 +30,7 @@ class ControlNode : public TreeNode
     virtual ~ControlNode() override = default;
 
     /// The method used to add nodes to the children vector
-    virtual void addChild(TreeNode* child);
+    void addChild(TreeNode* child);
 
     void insertChildAfter(TreeNode* child, TreeNode* sibling);
 

@@ -326,6 +326,37 @@ void VerifyXML(const std::string& xml_text,
                ThrowError(node->GetLineNum(),
                                    "A CheckerSequence node must have at least 3 children");
             }
+            auto child = node->FirstChildElement();
+            if(child == nullptr)
+               ThrowError(node->GetLineNum(),
+                                   "A CheckerSequence node must have a condition node as its first child");
+            else if(!StrEqual(child->Name(), "Condition"))
+               ThrowError(child->GetLineNum(),
+                                   "A CheckerSequence node must have a condition node as its first child");
+
+            for (; child != nullptr; child = child->NextSiblingElement())
+            {
+                if(!StrEqual(child->Name(), "Condition"))
+                    break;
+            }
+            if(child == nullptr)
+               ThrowError(node->GetLineNum(),
+                                   "A CheckerSequence node must have an Action node following the first set of Condition nodes");
+            else if(!StrEqual(child->Name(), "Action"))
+               ThrowError(child->GetLineNum(),
+                                   "A CheckerSequence node must have an Action node following the first set of Condition nodes");
+            if(child != nullptr)
+                child = child->NextSiblingElement();
+            if(child == nullptr)
+               ThrowError(node->GetLineNum(),
+                                   "A CheckerSequence node must have a Condition node following the Action node");
+            for (; child != nullptr; child = child->NextSiblingElement())
+            {
+                if(!StrEqual(child->Name(), "Condition"))
+                   ThrowError(child->GetLineNum(),
+                                   "A CheckerSequence node must only have Condition nodes following the Action node");
+            }
+
         }
         else if (StrEqual(name, "SubTree"))
         {
