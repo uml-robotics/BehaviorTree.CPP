@@ -251,7 +251,8 @@ void VerifyXML(const std::string& xml_text,
         {
             const char* name = node->Name();
             if (StrEqual(name, "Action") || StrEqual(name, "Decorator") ||
-                    StrEqual(name, "SubTree") || StrEqual(name, "Condition"))
+                    StrEqual(name, "SubTree") || StrEqual(name, "Condition") ||
+		    StrEqual(name, "CheckerCondition"))
             {
                 const char* ID = node->Attribute("ID");
                 if (!ID)
@@ -307,6 +308,19 @@ void VerifyXML(const std::string& xml_text,
             {
                ThrowError(node->GetLineNum(),
                                    "The node <Condition> must have the attribute [ID]");
+            }
+        }
+        else if (StrEqual(name, "CheckerCondition"))
+        {
+            if (children_count != 0)
+            {
+               ThrowError(node->GetLineNum(),
+                                   "The node <CheckerCondition> must not have any child");
+            }
+            if (!node->Attribute("ID"))
+            {
+               ThrowError(node->GetLineNum(),
+                                   "The node <CheckerCondition> must have the attribute [ID]");
             }
         }
         else if (StrEqual(name, "Sequence") ||
