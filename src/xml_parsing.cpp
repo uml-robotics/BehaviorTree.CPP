@@ -343,32 +343,32 @@ void VerifyXML(const std::string& xml_text,
             auto child = node->FirstChildElement();
             if(child == nullptr)
                ThrowError(node->GetLineNum(),
-                                   "A CheckerSequence node must have a condition node as its first child");
-            else if(!StrEqual(child->Name(), "Condition"))
+                                   "A CheckerSequence node must have a checkercondition node as its first child");
+            else if(!StrEqual(child->Name(), "CheckerCondition"))
                ThrowError(child->GetLineNum(),
-                                   "A CheckerSequence node must have a condition node as its first child");
+                                   "A CheckerSequence node must have a checkercondition node as its first child");
 
             for (; child != nullptr; child = child->NextSiblingElement())
             {
-                if(!StrEqual(child->Name(), "Condition"))
+                if(!StrEqual(child->Name(), "CheckerCondition"))
                     break;
             }
             if(child == nullptr)
                ThrowError(node->GetLineNum(),
-                                   "A CheckerSequence node must have an Action node following the first set of Condition nodes");
+                                   "A CheckerSequence node must have an Action node following the first set of CheckerCondition nodes");
             else if(!StrEqual(child->Name(), "Action"))
                ThrowError(child->GetLineNum(),
-                                   "A CheckerSequence node must have an Action node following the first set of Condition nodes");
+                                   "A CheckerSequence node must have an Action node following the first set of CheckerCondition nodes");
             if(child != nullptr)
                 child = child->NextSiblingElement();
             if(child == nullptr)
                ThrowError(node->GetLineNum(),
-                                   "A CheckerSequence node must have a Condition node following the Action node");
+                                   "A CheckerSequence node must have a CheckerCondition node following the Action node");
             for (; child != nullptr; child = child->NextSiblingElement())
             {
-                if(!StrEqual(child->Name(), "Condition"))
+                if(!StrEqual(child->Name(), "CheckerCondition"))
                    ThrowError(child->GetLineNum(),
-                                   "A CheckerSequence node must only have Condition nodes following the Action node");
+                                   "A CheckerSequence node must only have CheckerCondition nodes following the Action node");
             }
 
         }
@@ -500,7 +500,7 @@ TreeNode::Ptr XMLParser::Pimpl::createNodeFromXML(const XMLElement *element,
     std::string instance_name;
 
     // Actions and Decorators have their own ID
-    if (element_name == "Action" || element_name == "Decorator" || element_name == "Condition")
+    if (element_name == "Action" || element_name == "Decorator" || element_name == "Condition" || element_name == "CheckerCondition")
     {
         ID = element->Attribute("ID");
     }

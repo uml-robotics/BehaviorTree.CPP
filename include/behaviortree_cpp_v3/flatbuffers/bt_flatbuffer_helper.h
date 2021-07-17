@@ -21,6 +21,8 @@ inline Serialization::NodeType convertToFlatbuffers(BT::NodeType type)
             return Serialization::NodeType::CONTROL;
         case BT::NodeType::CONDITION:
             return Serialization::NodeType::CONDITION;
+        case BT::NodeType::CHECKERCONDITION:
+            return Serialization::NodeType::CHECKERCONDITION;
         case BT::NodeType::SUBTREE:
             return Serialization::NodeType::SUBTREE;
         case BT::NodeType::UNDEFINED:

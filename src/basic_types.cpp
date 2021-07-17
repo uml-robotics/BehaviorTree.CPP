@@ -81,6 +81,8 @@ template<> std::string toStr<NodeType>(NodeType type)
             return "Action";
         case NodeType::CONDITION:
             return "Condition";
+        case NodeType::CHECKERCONDITION:
+            return "CheckerCondition";
         case NodeType::DECORATOR:
             return "Decorator";
         case NodeType::CONTROL:
@@ -205,6 +207,7 @@ NodeType convertFromString<NodeType>(StringView str)
 {
     if( str == "Action" )    return NodeType::ACTION;
     if( str == "Condition" ) return NodeType::CONDITION;
+    if( str == "CheckerCondition" ) return NodeType::CHECKERCONDITION;
     if( str == "Control" )   return NodeType::CONTROL;
     if( str == "Decorator" ) return NodeType::DECORATOR;
     if( str == "SubTree" || str == "Subtree" ) return NodeType::SUBTREE;

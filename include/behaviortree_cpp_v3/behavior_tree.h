@@ -85,6 +85,7 @@ inline NodeType getType()
     // clang-format off
     if( std::is_base_of<ActionNodeBase, T>::value )        return NodeType::ACTION;
     if( std::is_base_of<ConditionNode, T>::value )         return NodeType::CONDITION;
+    if( std::is_base_of<CheckerConditionNode, T>::value )  return NodeType::CHECKERCONDITION;
     if( std::is_base_of<DecoratorSubtreeNode, T>::value )  return NodeType::SUBTREE;
     if( std::is_base_of<DecoratorNode, T>::value )         return NodeType::DECORATOR;
     if( std::is_base_of<ControlNode, T>::value )           return NodeType::CONTROL;

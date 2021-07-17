@@ -64,18 +64,20 @@ enum class NodeType : int8_t {
   UNDEFINED = 0,
   ACTION = 1,
   CONDITION = 2,
-  CONTROL = 3,
-  DECORATOR = 4,
-  SUBTREE = 5,
+  CHECKERCONDITION = 3,
+  CONTROL = 4,
+  DECORATOR = 5,
+  SUBTREE = 6,
   MIN = UNDEFINED,
   MAX = SUBTREE
 };
 
-inline const NodeType (&EnumValuesNodeType())[6] {
+inline const NodeType (&EnumValuesNodeType())[7] {
   static const NodeType values[] = {
     NodeType::UNDEFINED,
     NodeType::ACTION,
     NodeType::CONDITION,
+    NodeType::CHECKERCONDITION,
     NodeType::CONTROL,
     NodeType::DECORATOR,
     NodeType::SUBTREE
@@ -88,6 +90,7 @@ inline const char * const *EnumNamesNodeType() {
     "UNDEFINED",
     "ACTION",
     "CONDITION",
+    "CHECKERCONDITION",
     "CONTROL",
     "DECORATOR",
     "SUBTREE",

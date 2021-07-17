@@ -24,6 +24,7 @@ enum class NodeType
     UNDEFINED = 0,
     ACTION,
     CONDITION,
+    CHECKERCONDITION,
     CONTROL,
     DECORATOR,
     SUBTREE

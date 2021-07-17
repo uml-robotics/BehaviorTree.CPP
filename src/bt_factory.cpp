@@ -99,6 +99,28 @@ void BehaviorTreeFactory::registerSimpleCondition(const std::string& ID,
     TreeNodeManifest manifest = { NodeType::CONDITION, ID, std::move(ports) };
     registerBuilder(manifest, builder);
 }
+void BehaviorTreeFactory::registerSimpleCheckerCondition(const std::string& ID,
+                                                  const std::function<bool(TreeNode&)>& tick_bool_functor,
+                                                  PortsList ports)
+{
+    auto tick_functor = [tick_bool_functor](TreeNode& parent_node) -> NodeStatus {
+        return tick_bool_functor(parent_node) ? NodeStatus::SUCCESS : NodeStatus::FAILURE;
+    };
+
+    registerSimpleCheckerCondition(ID, tick_functor, ports);
+}
+
+void BehaviorTreeFactory::registerSimpleCheckerCondition(const std::string& ID,
+                                                  const SimpleCheckerConditionNode::TickFunctor& tick_functor,
+                                                  PortsList ports)
+{
+    NodeBuilder builder = [tick_functor, ID](const std::string& name, const NodeConfiguration& config) {
+        return std::make_unique<SimpleCheckerConditionNode>(name, tick_functor, config);
+    };
+
+    TreeNodeManifest manifest = { NodeType::CHECKERCONDITION, ID, std::move(ports) };
+    registerBuilder(manifest, builder);
+}
 
 void BehaviorTreeFactory::registerSimpleAction(const std::string& ID,
                                                const std::function<bool(TreeNode&)>& tick_bool_functor,
