@@ -177,6 +177,28 @@ public:
                                  const SimpleConditionNode::TickFunctor& tick_functor,
                                  PortsList ports = {});
     /**
+    * @brief registerSimpleCheckerCondition help you register nodes of type SimpleCheckerConditionNode.
+    *
+    * @param ID            registration ID
+    * @param tick_bool_functor  the callback to be wrapped with NodeStatus return type (true: SUCCESS, false: FAILURE) and invoked in the tick() method.
+    * @param ports         if your SimpleNode requires ports, provide the list here.
+    *
+    * */
+    void registerSimpleCheckerCondition(const std::string &ID,
+                                 const std::function<bool(TreeNode &)> &tick_bool_functor,
+                                 PortsList ports = {});
+    /**
+    * @brief registerSimpleCheckerCondition help you register nodes of type SimpleCheckerConditionNode.
+    *
+    * @param ID            registration ID
+    * @param tick_functor  the callback to be invoked in the tick() method.
+    * @param ports         if your SimpleNode requires ports, provide the list here.
+    *
+    * */
+    void registerSimpleCheckerCondition(const std::string& ID,
+                                 const SimpleCheckerConditionNode::TickFunctor& tick_functor,
+                                 PortsList ports = {});
+    /**
     * @brief registerSimpleDecorator help you register nodes of type SimpleDecoratorNode.
     *
     * @param ID            registration ID
@@ -209,7 +231,7 @@ public:
     /** registerNodeType is the method to use to register your custom TreeNode.
      *
      *  It accepts only classed derived from either ActionNodeBase, DecoratorNode,
-     *  ControlNode or ConditionNode.
+     *  ControlNode, ConditionNode, CheckerConditionNode.
      */
     template <typename T>
     void registerNodeType(const std::string& ID)
@@ -217,9 +239,10 @@ public:
         static_assert(std::is_base_of<ActionNodeBase, T>::value ||
                       std::is_base_of<ControlNode, T>::value ||
                       std::is_base_of<DecoratorNode, T>::value ||
-                      std::is_base_of<ConditionNode, T>::value,
+                      std::is_base_of<ConditionNode, T>::value ||
+                      std::is_base_of<CheckerConditionNode, T>::value,
                       "[registerBuilder]: accepts only classed derived from either ActionNodeBase, "
-                      "DecoratorNode, ControlNode or ConditionNode");
+                      "DecoratorNode, ControlNode, ConditionNode or CheckerConditionNode");
 
         static_assert(!std::is_abstract<T>::value,
                       "[registerBuilder]: Some methods are pure virtual. "

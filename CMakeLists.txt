@@ -135,6 +135,7 @@ list(APPEND BT_SOURCE
     src/bt_factory.cpp
     src/decorator_node.cpp
     src/condition_node.cpp
+    src/checker_condition_node.cpp
     src/control_node.cpp
     src/shared_library.cpp
     src/tree_node.cpp
