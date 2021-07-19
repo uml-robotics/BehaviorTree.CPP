@@ -3,7 +3,7 @@
 namespace BT
 {
 CheckerConditionNode::CheckerConditionNode(const std::string& name, const NodeConfiguration& config)
-  : LeafNode::LeafNode(name, config)
+  : LeafNode::LeafNode(name, config), checker_status("")
 {
 }
 

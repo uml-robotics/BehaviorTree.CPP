@@ -2,6 +2,7 @@
 #define CHECKERCONDITIONNODE_H
 
 #include "leaf_node.h"
+#include <string.h>
 
 namespace BT
 {
@@ -23,6 +24,14 @@ class CheckerConditionNode : public LeafNode
     {
         return NodeType::CHECKERCONDITION;
     }
+
+    std::string getCheckerStatus()
+    {
+	return checker_status;
+    }
+
+    private:
+      std::string checker_status;
 };
 
 class SimpleCheckerConditionNode : public CheckerConditionNode
