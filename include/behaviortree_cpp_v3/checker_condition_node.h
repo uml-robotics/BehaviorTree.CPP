@@ -6,6 +6,12 @@
 
 namespace BT
 {
+
+struct CheckerStatus {
+  CheckerNodeStatus status;
+  std::string description;
+};
+
 class CheckerConditionNode : public LeafNode
 {
   public:
@@ -27,17 +33,17 @@ class CheckerConditionNode : public LeafNode
 
     std::string getCheckerStatus()
     {
-	return checker_status;
+	return checker_status_description;
     }
 
-    private:
-      std::string checker_status;
+    protected:
+      std::string checker_status_description;
 };
 
 class SimpleCheckerConditionNode : public CheckerConditionNode
 {
   public:
-    typedef std::function<NodeStatus(TreeNode&)> TickFunctor;
+    typedef std::function<CheckerStatus(TreeNode&)> TickFunctor;
 
     // You must provide the function to call when tick() is invoked
     SimpleCheckerConditionNode(const std::string& name, TickFunctor tick_functor,

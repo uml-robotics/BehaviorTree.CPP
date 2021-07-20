@@ -22,6 +22,25 @@ std::string toStr<NodeStatus>(NodeStatus status)
     return "";
 }
 
+template <>
+std::string toStr<CheckerNodeStatus>(CheckerNodeStatus status)
+{
+    switch (status)
+    {
+        case CheckerNodeStatus::SUCCESS:
+            return "SUCCESS";
+        case CheckerNodeStatus::DEGRADED:
+            return "DEGRADED";
+        case CheckerNodeStatus::FAILURE:
+            return "FAILURE";
+        case CheckerNodeStatus::RUNNING:
+            return "RUNNING";
+        case CheckerNodeStatus::IDLE:
+            return "IDLE";
+    }
+    return "";
+}
+
 std::string toStr(std::string value)
 {
   return value;
@@ -50,6 +69,41 @@ std::string toStr(NodeStatus status, bool colored)
                         "RUNNING"
                         "\x1b[0m";   // YELLOW
             case NodeStatus::IDLE:
+                return "\x1b[36m"
+                        "IDLE"
+                        "\x1b[0m";   // CYAN
+        }
+    }
+    return "Undefined";
+}
+
+std::string toStr(CheckerNodeStatus status, bool colored)
+{
+    if (!colored)
+    {
+        return toStr(status);
+    }
+    else
+    {
+        switch (status)
+        {
+            case CheckerNodeStatus::SUCCESS:
+                return "\x1b[32m"
+                        "SUCCESS"
+                        "\x1b[0m";   // GREEN
+            case CheckerNodeStatus::DEGRADED:
+                return "\x1B[38;2;255;165;0m"
+                        "DEGRADED"
+                        "\x1b[0m";   // ORANGE
+            case CheckerNodeStatus::FAILURE:
+                return "\x1b[31m"
+                        "FAILURE"
+                        "\x1b[0m";   // RED
+            case CheckerNodeStatus::RUNNING:
+                return "\x1b[33m"
+                        "RUNNING"
+                        "\x1b[0m";   // YELLOW
+            case CheckerNodeStatus::IDLE:
                 return "\x1b[36m"
                         "IDLE"
                         "\x1b[0m";   // CYAN
@@ -203,6 +257,17 @@ NodeStatus convertFromString<NodeStatus>(StringView str)
 }
 
 template <>
+CheckerNodeStatus convertFromString<CheckerNodeStatus>(StringView str)
+{
+    if( str == "IDLE" )    return CheckerNodeStatus::IDLE;
+    if( str == "RUNNING" ) return CheckerNodeStatus::RUNNING;
+    if( str == "SUCCESS" ) return CheckerNodeStatus::SUCCESS;
+    if( str == "DEGRADED" ) return CheckerNodeStatus::DEGRADED;
+    if( str == "FAILURE" ) return CheckerNodeStatus::FAILURE;
+    throw RuntimeError(std::string("Cannot convert this to CheckerNodeStatus: ") + str.to_string() );
+}
+
+template <>
 NodeType convertFromString<NodeType>(StringView str)
 {
     if( str == "Action" )    return NodeType::ACTION;
@@ -230,6 +295,12 @@ std::ostream& operator<<(std::ostream& os, const NodeType& type)
 }
 
 std::ostream& operator<<(std::ostream& os, const NodeStatus& status)
+{
+    os << toStr(status);
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const CheckerNodeStatus& status)
 {
     os << toStr(status);
     return os;

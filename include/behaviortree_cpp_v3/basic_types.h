@@ -41,6 +41,15 @@ enum class NodeStatus
     FAILURE
 };
 
+enum class CheckerNodeStatus
+{
+    IDLE = 0,
+    RUNNING,
+    SUCCESS,
+    DEGRADED,
+    FAILURE
+};
+
 enum class PortDirection{
     INPUT,
     OUTPUT,
@@ -97,6 +106,9 @@ bool convertFromString<bool>(StringView str);
 template <> // Names with all capital letters
 NodeStatus convertFromString<NodeStatus>(StringView str);
 
+template <> // Names with all capital letters
+CheckerNodeStatus convertFromString<CheckerNodeStatus>(StringView str);
+
 template <>  // Names with all capital letters
 NodeType convertFromString<NodeType>(StringView str);
 
@@ -134,12 +146,18 @@ std::string toStr(std::string value);
 
 template<> std::string toStr<BT::NodeStatus>(BT::NodeStatus status);
 
+template<> std::string toStr<BT::CheckerNodeStatus>(BT::CheckerNodeStatus status);
+
 /**
  * @brief toStr converts NodeStatus to string. Optionally colored.
  */
 std::string toStr(BT::NodeStatus status, bool colored);
 
+std::string toStr(BT::CheckerNodeStatus status, bool colored);
+
 std::ostream& operator<<(std::ostream& os, const BT::NodeStatus& status);
+
+std::ostream& operator<<(std::ostream& os, const BT::CheckerNodeStatus& status);
 
 /**
  * @brief toStr converts NodeType to string.
@@ -147,7 +165,6 @@ std::ostream& operator<<(std::ostream& os, const BT::NodeStatus& status);
 template<> std::string toStr<BT::NodeType>(BT::NodeType type);
 
 std::ostream& operator<<(std::ostream& os, const BT::NodeType& type);
-
 
 template<> std::string toStr<BT::PortDirection>(BT::PortDirection direction);
 
