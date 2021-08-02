@@ -166,6 +166,9 @@ class TreeNode
         return str;
     }
 
+    virtual std::string status_description() const {
+        return (toStr(status_) + ":NO DESC AVAILABLE\n");
+    }
   protected:
     /// Method to be implemented by the user
     virtual BT::NodeStatus tick() = 0;

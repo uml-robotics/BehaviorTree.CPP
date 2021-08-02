@@ -31,9 +31,8 @@ class CheckerConditionNode : public LeafNode
         return NodeType::CHECKERCONDITION;
     }
 
-    std::string getCheckerStatus()
-    {
-	return checker_status_description;
+    virtual std::string status_description() const override final {
+        return checker_status_description;
     }
 
     protected:
