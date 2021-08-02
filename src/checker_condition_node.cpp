@@ -19,6 +19,7 @@ NodeStatus SimpleCheckerConditionNode::tick()
 
     if (prev_status == NodeStatus::IDLE)
     {
+        ++execution_count;
         setStatus(NodeStatus::RUNNING);
         prev_status = NodeStatus::RUNNING;
     }
@@ -36,15 +37,15 @@ NodeStatus SimpleCheckerConditionNode::tick()
           break;
       case CheckerNodeStatus::SUCCESS:
           status = NodeStatus::SUCCESS;
-          checker_status_description = "SUCCESS:" + checker_status.description;
+          checker_status_description = "SUCCESS:" + checker_status.description + ":" + std::to_string(execution_count);
           break;
       case CheckerNodeStatus::DEGRADED:
           status = NodeStatus::SUCCESS;
-          checker_status_description = "DEGRADED:" + checker_status.description;
+          checker_status_description = "DEGRADED:" + checker_status.description + ":" + std::to_string(execution_count);
           break;
       case CheckerNodeStatus::FAILURE:
           status = NodeStatus::FAILURE;
-          checker_status_description = "FAILURE:" + checker_status.description;
+          checker_status_description = "FAILURE:" + checker_status.description + ":" + std::to_string(execution_count);
           break;
     }
     if (status != prev_status)

@@ -37,6 +37,7 @@ class CheckerConditionNode : public LeafNode
 
     protected:
       std::string checker_status_description;
+      int execution_count = 0;
 };
 
 class SimpleCheckerConditionNode : public CheckerConditionNode
