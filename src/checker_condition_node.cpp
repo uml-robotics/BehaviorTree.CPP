@@ -38,14 +38,17 @@ NodeStatus SimpleCheckerConditionNode::tick()
       case CheckerNodeStatus::SUCCESS:
           status = NodeStatus::SUCCESS;
           checker_status_description = "SUCCESS:" + checker_status.description + ":" + std::to_string(execution_count);
+          description_history.push_back(checker_status_description);
           break;
       case CheckerNodeStatus::DEGRADED:
           status = NodeStatus::SUCCESS;
           checker_status_description = "DEGRADED:" + checker_status.description + ":" + std::to_string(execution_count);
+          description_history.push_back(checker_status_description);
           break;
       case CheckerNodeStatus::FAILURE:
           status = NodeStatus::FAILURE;
           checker_status_description = "FAILURE:" + checker_status.description + ":" + std::to_string(execution_count);
+          description_history.push_back(checker_status_description);
           break;
     }
     if (status != prev_status)
