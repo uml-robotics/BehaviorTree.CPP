@@ -141,6 +141,41 @@ class AsyncActionNode : public ActionNodeBase
 };
 
 /**
+ * @brief The SimpleAsyncActionNode provides an easy to use AsyncActionNode.
+ * The user should simply provide a callback with this signature
+ *
+ *    BT::NodeStatus functionName(TreeNode&)
+ *
+ * This avoids the hassle of inheriting from a ActionNode.
+ *
+ * Using lambdas or std::bind it is easy to pass a pointer to a method.
+ * SimpleAsyncActionNode does not support halting.
+ * NodeParameters aren't supported.
+ */
+class SimpleAsyncActionNode : public AsyncActionNode
+{
+  public:
+    typedef std::function<NodeStatus(TreeNode&)> TickFunctor;
+
+    // You must provide the function to call when tick() is invoked
+    SimpleAsyncActionNode(const std::string& name, TickFunctor tick_functor,
+                     const NodeConfiguration& config);
+
+    ~SimpleAsyncActionNode() override = default;
+
+  protected:
+    virtual NodeStatus tick() override final;
+
+    virtual void halt() override
+    {
+      stopAndJoinThread();
+    }
+
+    TickFunctor tick_functor_;
+};
+
+
+/**
  * @brief The ActionNode is the goto option for,
  * but it is actually much easier to use correctly.
  *

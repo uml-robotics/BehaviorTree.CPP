@@ -134,6 +134,28 @@ void BehaviorTreeFactory::registerSimpleAction(const std::string& ID,
     TreeNodeManifest manifest = { NodeType::ACTION, ID, std::move(ports) };
     registerBuilder(manifest, builder);
 }
+void BehaviorTreeFactory::registerSimpleAsyncAction(const std::string& ID,
+                                               const std::function<bool(TreeNode&)>& tick_bool_functor,
+                                               PortsList ports)
+{
+    auto tick_functor = [tick_bool_functor](TreeNode& parent_node) -> NodeStatus {
+        return tick_bool_functor(parent_node) ? NodeStatus::SUCCESS : NodeStatus::FAILURE;
+    };
+
+    registerSimpleAsyncAction(ID, tick_functor, ports);
+}
+
+void BehaviorTreeFactory::registerSimpleAsyncAction(const std::string& ID,
+                                               const SimpleAsyncActionNode::TickFunctor& tick_functor,
+                                               PortsList ports)
+{
+    NodeBuilder builder = [tick_functor, ID](const std::string& name, const NodeConfiguration& config) {
+        return std::make_unique<SimpleAsyncActionNode>(name, tick_functor, config);
+    };
+
+    TreeNodeManifest manifest = { NodeType::ACTION, ID, std::move(ports) };
+    registerBuilder(manifest, builder);
+}
 
 void BehaviorTreeFactory::registerSimpleDecorator(const std::string& ID,
                                                   const SimpleDecoratorNode::TickFunctor& tick_functor,

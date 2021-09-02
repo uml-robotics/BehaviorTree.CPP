@@ -155,6 +155,28 @@ public:
                               const SimpleActionNode::TickFunctor& tick_functor,
                               PortsList ports = {});
     /**
+    * @brief registerSimpleAsyncAction help you register nodes of type SimpleAsyncActionNode.
+    *
+    * @param ID                 registration ID
+    * @param tick_bool_functor  the callback to be wrapped with NodeStatus return type (true: SUCCESS, false: FAILURE) and invoked in the tick() method.
+    * @param ports              if your SimpleNode requires ports, provide the list here.
+    *
+    * */
+    void registerSimpleAsyncAction(const std::string& ID,
+                              const std::function<bool(TreeNode&)>& tick_bool_functor,
+                              PortsList ports = {});
+    /**
+    * @brief registerSimpleAsyncAction help you register nodes of type SimplAsyncActionNode.
+    *
+    * @param ID            registration ID
+    * @param tick_functor  the callback to be invoked in the tick() method.
+    * @param ports         if your SimpleNode requires ports, provide the list here.
+    *
+    * */
+    void registerSimpleAsyncAction(const std::string& ID,
+                              const SimpleAsyncActionNode::TickFunctor& tick_functor,
+                              PortsList ports = {});
+    /**
     * @brief registerSimpleCondition help you register nodes of type SimpleConditionNode.
     *
     * @param ID            registration ID

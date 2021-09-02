@@ -46,7 +46,7 @@ NodeStatus SimpleCheckerConditionNode::tick()
           description_history.push_back(checker_status_description);
           break;
       case CheckerNodeStatus::FAILURE:
-          status = NodeStatus::SUCCESS;
+          status = NodeStatus::FAILURE;
           checker_status_description = "FAILURE:" + checker_status.description + ":" + std::to_string(execution_count);
           description_history.push_back(checker_status_description);
           break;

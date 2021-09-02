@@ -145,6 +145,18 @@ void AsyncActionNode::stopAndJoinThread()
     }
 }
 
+SimpleAsyncActionNode::SimpleAsyncActionNode(const std::string& name,
+                                   SimpleAsyncActionNode::TickFunctor tick_functor,
+                                   const NodeConfiguration& config)
+  : AsyncActionNode(name, config), tick_functor_(std::move(tick_functor))
+{
+}
+
+NodeStatus SimpleAsyncActionNode::tick()
+{
+    return tick_functor_(*this);
+}
+
 
 SyncActionNode::SyncActionNode(const std::string &name, const NodeConfiguration& config):
   ActionNodeBase(name, config)
