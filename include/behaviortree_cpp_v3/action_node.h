@@ -168,7 +168,7 @@ class SimpleAsyncActionNode : public AsyncActionNode
 
     virtual void halt() override
     {
-      stopAndJoinThread();
+      //stopAndJoinThread();
     }
 
     TickFunctor tick_functor_;
