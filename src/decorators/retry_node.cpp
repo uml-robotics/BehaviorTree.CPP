@@ -1,5 +1,5 @@
 /* Copyright (C) 2015-2018 Michele Colledanchise -  All Rights Reserved
- * Copyright (C) 2018-2019 Davide Faconti, Eurecat -  All Rights Reserved
+ * Copyright (C) 2018-2020 Davide Faconti, Eurecat -  All Rights Reserved
 *
 *   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
 *   to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -23,7 +23,7 @@ RetryNode::RetryNode(const std::string& name, int NTries)
     try_index_(0),
     read_parameter_from_ports_(false)
 {
-    setRegistrationID("RetryUntilSuccesful");
+    setRegistrationID("RetryUntilSuccessful");
 }
 
 RetryNode::RetryNode(const std::string& name, const NodeConfiguration& config)
@@ -52,21 +52,22 @@ NodeStatus RetryNode::tick()
 
     setStatus(NodeStatus::RUNNING);
 
-    while (try_index_ < max_attempts_)
+    while (try_index_ < max_attempts_ || max_attempts_ == -1)
     {
         NodeStatus child_state = child_node_->executeTick();
-
         switch (child_state)
         {
             case NodeStatus::SUCCESS:
             {
                 try_index_ = 0;
+                haltChild();
                 return (NodeStatus::SUCCESS);
             }
 
             case NodeStatus::FAILURE:
             {
                 try_index_++;
+                haltChild();
             }
             break;
 

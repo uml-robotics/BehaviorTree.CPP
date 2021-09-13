@@ -66,7 +66,7 @@ inline void CreateFlatbuffersBehaviorTree(flatbuffers::FlatBufferBuilder& builde
 {
     std::vector<flatbuffers::Offset<Serialization::TreeNode>> fb_nodes;
 
-    applyRecursiveVisitor(tree.root_node, [&](BT::TreeNode* node)
+    applyRecursiveVisitor(tree.rootNode(), [&](BT::TreeNode* node)
     {
         std::vector<uint16_t> children_uid;
         if (auto control = dynamic_cast<BT::ControlNode*>(node))
@@ -137,7 +137,7 @@ inline void CreateFlatbuffersBehaviorTree(flatbuffers::FlatBufferBuilder& builde
         node_models.push_back(node_model);
     }
 
-    auto behavior_tree = Serialization::CreateBehaviorTree(builder, tree.root_node->UID(),
+    auto behavior_tree = Serialization::CreateBehaviorTree(builder, tree.rootNode()->UID(),
                                                            builder.CreateVector(fb_nodes),
                                                            builder.CreateVector(node_models));
 

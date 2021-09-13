@@ -1,50 +1,69 @@
-cmake_minimum_required(VERSION 2.8.12) # version on Ubuntu Trusty
+cmake_minimum_required(VERSION 3.5.1) # version on Ubuntu Xenial
 project(behaviortree_cpp_v3)
 
-if(NOT CMAKE_VERSION VERSION_LESS 3.1)
-    set(CMAKE_CXX_STANDARD 11)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-endif()
+#---- Add the subdirectory cmake ----
+set(CMAKE_CONFIG_PATH ${CMAKE_MODULE_PATH}  "${CMAKE_CURRENT_LIST_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CONFIG_PATH}")
+
+#---- Enable C++14 ----
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+else()
+    add_definitions(-Wpedantic)
 endif()
 
-if( MINGW )
+#---- Include boost to add coroutines ----
+find_package(Boost COMPONENTS coroutine QUIET)
+
+if(Boost_FOUND)
+    string(REPLACE "." "0" Boost_VERSION_NODOT ${Boost_VERSION})
+    if(NOT Boost_VERSION_NODOT VERSION_LESS 105900)
+        message(STATUS "Found boost::coroutine2.")
+        add_definitions(-DBT_BOOST_COROUTINE2)
+        set(BT_COROUTINES true)
+    elseif(NOT Boost_VERSION_NODOT VERSION_LESS 105300)
+        message(STATUS "Found boost::coroutine.")
+        add_definitions(-DBT_BOOST_COROUTINE)
+        set(BT_COROUTINES true)
+    endif()
+    include_directories(${Boost_INCLUDE_DIRS})
+endif()
+
+
+if(NOT DEFINED BT_COROUTINES)
+    message(STATUS "Coroutines disabled. Install Boost to enable them (version 1.59+ recommended).")
     add_definitions(-DBT_NO_COROUTINES)
 endif()
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-set(CMAKE_CONFIG_PATH ${CMAKE_MODULE_PATH}  "${CMAKE_CURRENT_LIST_DIR}/cmake")
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CONFIG_PATH}")
-
+#---- project configuration ----
 option(BUILD_EXAMPLES   "Build tutorials and examples" ON)
 option(BUILD_UNIT_TESTS "Build the unit tests" ON)
 option(BUILD_TOOLS "Build commandline tools" ON)
+option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
-#############################################################
-# Find packages
+#---- Find other packages ----
 find_package(Threads)
 find_package(ZMQ)
 
-list(APPEND BEHAVIOR_TREE_EXTERNAL_LIBRARIES
+list(APPEND BEHAVIOR_TREE_PUBLIC_LIBRARIES
     ${CMAKE_THREAD_LIBS_INIT}
-    ${CMAKE_DL_LIBS} )
+    ${CMAKE_DL_LIBS}
+)
 
 if( ZMQ_FOUND )
     message(STATUS "ZeroMQ found.")
     add_definitions( -DZMQ_FOUND )
     list(APPEND BT_SOURCE src/loggers/bt_zmq_publisher.cpp)
-    list(APPEND BEHAVIOR_TREE_EXTERNAL_LIBRARIES zmq)
 else()
     message(WARNING "ZeroMQ NOT found. Skipping the build of [PublisherZMQ] and [bt_recorder].")
 endif()
 
 set(BEHAVIOR_TREE_LIBRARY ${PROJECT_NAME})
-
 
 # Update the policy setting to avoid an error when loading the ament_cmake package
 # at the current cmake version level
@@ -55,7 +74,6 @@ endif()
 find_package(ament_cmake QUIET)
 
 if ( ament_cmake_FOUND )
-    find_package(ament_cmake_gtest REQUIRED)
 
     # Not adding -DUSING_ROS since xml_parsing.cpp hasn't been ported to ROS2
 
@@ -82,16 +100,11 @@ elseif( CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE)
         CATKIN_DEPENDS roslib
         )
 
-    list(APPEND BEHAVIOR_TREE_EXTERNAL_LIBRARIES ${catkin_LIBRARIES})
+    list(APPEND BEHAVIOR_TREE_PUBLIC_LIBRARIES ${catkin_LIBRARIES})
     set(BUILD_TOOL_INCLUDE_DIRS ${catkin_INCLUDE_DIRS})
 
-else()
-    find_package(GTest)
-
-    if(NOT GTEST_FOUND)
-        message(WARNING " GTest missing!")
-    endif(NOT GTEST_FOUND)
-
+elseif(BUILD_UNIT_TESTS)
+    find_package(GTest REQUIRED)
 endif()
 
 
@@ -145,14 +158,17 @@ list(APPEND BT_SOURCE
     src/decorators/repeat_node.cpp
     src/decorators/retry_node.cpp
     src/decorators/subtree_node.cpp
-    src/decorators/timeout_node.cpp
+    src/decorators/delay_node.cpp
 
+    src/controls/if_then_else_node.cpp
     src/controls/fallback_node.cpp
     src/controls/parallel_node.cpp
     src/controls/reactive_sequence.cpp
     src/controls/reactive_fallback.cpp
     src/controls/sequence_node.cpp
     src/controls/sequence_star_node.cpp
+    src/controls/switch_node.cpp
+    src/controls/while_do_else_node.cpp
 
     src/loggers/bt_cout_logger.cpp
     src/loggers/bt_file_logger.cpp
@@ -162,11 +178,26 @@ list(APPEND BT_SOURCE
     3rdparty/minitrace/minitrace.cpp
     )
 
+find_package(Curses QUIET)
+
+if(CURSES_FOUND)
+    list(APPEND BT_SOURCE
+        src/controls/manual_node.cpp
+        )
+    list(APPEND BEHAVIOR_TREE_PUBLIC_LIBRARIES ${CURSES_LIBRARIES})
+    add_definitions(-DNCURSES_FOUND)
+endif()
+
+
 ######################################################
 
 if (UNIX)
     list(APPEND BT_SOURCE src/shared_library_UNIX.cpp )
-    add_library(${BEHAVIOR_TREE_LIBRARY} SHARED ${BT_SOURCE} )
+    if (BUILD_SHARED_LIBS)
+        add_library(${BEHAVIOR_TREE_LIBRARY} SHARED ${BT_SOURCE})
+    else()
+        add_library(${BEHAVIOR_TREE_LIBRARY} STATIC ${BT_SOURCE})
+    endif()
 endif()
 
 if (WIN32)
@@ -175,8 +206,22 @@ if (WIN32)
     add_library(${BEHAVIOR_TREE_LIBRARY} STATIC ${BT_SOURCE} )
 endif()
 
+if( ZMQ_FOUND )
+    list(APPEND BUILD_TOOL_INCLUDE_DIRS ${ZMQ_INCLUDE_DIRS})
+endif()
+
 target_link_libraries(${BEHAVIOR_TREE_LIBRARY} PUBLIC
-    ${BEHAVIOR_TREE_EXTERNAL_LIBRARIES})
+    ${BEHAVIOR_TREE_PUBLIC_LIBRARIES})
+
+target_link_libraries(${BEHAVIOR_TREE_LIBRARY} PRIVATE
+    ${Boost_LIBRARIES}
+    ${ZMQ_LIBRARIES})
+
+#get_target_property(my_libs ${BEHAVIOR_TREE_LIBRARY} INTERFACE_LINK_LIBRARIES)
+#list(REMOVE_ITEM _libs X)
+#message("my_libs: ${my_libs}")
+
+#set_target_properties(${BEHAVIOR_TREE_LIBRARY} PROPERTIES INTERFACE_LINK_LIBRARIES "")
 
 target_compile_definitions(${BEHAVIOR_TREE_LIBRARY} PRIVATE $<$<CONFIG:Debug>:TINYXML2_DEBUG>)
 
@@ -191,7 +236,6 @@ if( ZMQ_FOUND )
 endif()
 
 if(MSVC)
-    target_compile_options(${BEHAVIOR_TREE_LIBRARY} PRIVATE /W4 /WX)
 else()
     target_compile_options(${BEHAVIOR_TREE_LIBRARY} PRIVATE
         -Wall -Wextra -Werror=return-type)
@@ -199,30 +243,33 @@ endif()
 
 ######################################################
 # Test
-add_subdirectory(tests)
+if (BUILD_UNIT_TESTS)
+    add_subdirectory(tests)
+endif()
 
 ######################################################
 # INSTALL
-set(PROJECT_NAMESPACE BehaviorTree)
-set(PROJECT_CONFIG ${PROJECT_NAMESPACE}Config)
 
 INSTALL(TARGETS ${BEHAVIOR_TREE_LIBRARY}
-    EXPORT ${PROJECT_CONFIG}
-    ARCHIVE DESTINATION ${BEHAVIOR_TREE_BIN_DESTINATION}
+    EXPORT BehaviorTreeV3Config
+    ARCHIVE DESTINATION ${BEHAVIOR_TREE_LIB_DESTINATION}
     LIBRARY DESTINATION ${BEHAVIOR_TREE_LIB_DESTINATION}
+    RUNTIME DESTINATION ${BEHAVIOR_TREE_BIN_DESTINATION}
     )
 
 INSTALL( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
     DESTINATION ${BEHAVIOR_TREE_INC_DESTINATION}
     FILES_MATCHING PATTERN "*.h*")
 
-install(EXPORT ${PROJECT_CONFIG}
-    DESTINATION "${BEHAVIOR_TREE_LIB_DESTINATION}/${PROJECT_NAMESPACE}/cmake"
-    NAMESPACE ${PROJECT_NAMESPACE}::)
+install(EXPORT BehaviorTreeV3Config
+    DESTINATION "${BEHAVIOR_TREE_LIB_DESTINATION}/BehaviorTreeV3/cmake"
+    NAMESPACE BT::)
 
 export(TARGETS ${PROJECT_NAME}
-    NAMESPACE ${PROJECT_NAMESPACE}::
-    FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_CONFIG}.cmake")
+    NAMESPACE BT::
+    FILE "${CMAKE_CURRENT_BINARY_DIR}/BehaviorTreeV3Config.cmake")
+
+export(PACKAGE ${PROJECT_NAME})
 
 ######################################################
 # EXAMPLES and TOOLS
@@ -234,5 +281,3 @@ if( BUILD_EXAMPLES )
     add_subdirectory(sample_nodes)
     add_subdirectory(examples)
 endif()
-
-
