@@ -149,7 +149,7 @@ class Blackboard
 
             Any temp(value);
 
-            if( locked_type && locked_type != &typeid(T) && locked_type != &temp.type() )
+            if( locked_type && *locked_type != typeid(T) && *locked_type != temp.type() )
             {
                 bool mismatching = true;
                 if( std::is_constructible<StringView, T>::value )
@@ -183,10 +183,19 @@ class Blackboard
 
     const PortInfo *portInfo(const std::string& key);
 
-    void addSubtreeRemapping(std::string internal, std::string external);
+    void addSubtreeRemapping(StringView internal, StringView external);
 
     void debugMessage() const;
 
+    std::vector<StringView> getKeys() const;
+
+    void clear()
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        storage_.clear();
+        internal_to_external_.clear();
+    }
+  
   private:
 
     struct Entry{

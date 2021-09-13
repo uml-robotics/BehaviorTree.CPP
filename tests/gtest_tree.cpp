@@ -15,6 +15,9 @@
 #include "condition_test_node.h"
 #include "behaviortree_cpp_v3/behavior_tree.h"
 
+#include <sstream>
+#include <string>
+
 using BT::NodeStatus;
 using std::chrono::milliseconds;
 
@@ -43,7 +46,6 @@ struct BehaviorTreeTest : testing::Test
     }
     ~BehaviorTreeTest()
     {
-        haltAllActions(&root);
     }
 };
 
@@ -51,8 +53,8 @@ struct BehaviorTreeTest : testing::Test
 
 TEST_F(BehaviorTreeTest, Condition1ToFalseCondition2True)
 {
-    condition_1.setBoolean(false);
-    condition_2.setBoolean(true);
+    condition_1.setExpectedResult(NodeStatus::FAILURE);
+    condition_2.setExpectedResult(NodeStatus::SUCCESS);
 
     BT::NodeStatus state = root.executeTick();
 
@@ -65,8 +67,8 @@ TEST_F(BehaviorTreeTest, Condition1ToFalseCondition2True)
 
 TEST_F(BehaviorTreeTest, Condition2ToFalseCondition1True)
 {
-    condition_2.setBoolean(false);
-    condition_1.setBoolean(true);
+    condition_2.setExpectedResult(NodeStatus::FAILURE);
+    condition_1.setExpectedResult(NodeStatus::SUCCESS);
 
     BT::NodeStatus state = root.executeTick();
 
@@ -75,6 +77,45 @@ TEST_F(BehaviorTreeTest, Condition2ToFalseCondition1True)
     ASSERT_EQ(NodeStatus::IDLE, condition_1.status());
     ASSERT_EQ(NodeStatus::IDLE, condition_2.status());
     ASSERT_EQ(NodeStatus::RUNNING, action_1.status());
+}
+
+TEST_F(BehaviorTreeTest, PrintWithStream)
+{
+    // no stream parameter should go to default stream (std::cout)
+    BT::printTreeRecursively(&root);
+
+    // verify value for with custom stream parameter
+    std::stringstream stream;
+    BT::printTreeRecursively(&root, stream);
+    const auto string = stream.str();
+    std::string line;
+
+    // first line is all dashes
+    ASSERT_FALSE(std::getline(stream, line, '\n').fail());
+    ASSERT_STREQ("----------------", line.c_str());
+
+    // each line is the name of the node, indented by depth * 3 spaces
+    ASSERT_FALSE(std::getline(stream, line, '\n').fail());
+    ASSERT_STREQ(root.name().c_str(), line.c_str());
+
+    ASSERT_FALSE(std::getline(stream, line, '\n').fail());
+    ASSERT_STREQ(("   " + fal_conditions.name()).c_str(), line.c_str());
+
+    ASSERT_FALSE(std::getline(stream, line, '\n').fail());
+    ASSERT_STREQ(("      " + condition_1.name()).c_str(), line.c_str());
+
+    ASSERT_FALSE(std::getline(stream, line, '\n').fail());
+    ASSERT_STREQ(("      " + condition_2.name()).c_str(), line.c_str());
+
+    ASSERT_FALSE(std::getline(stream, line, '\n').fail());
+    ASSERT_STREQ(("   " + action_1.name()).c_str(), line.c_str());
+
+    // last line is all dashes
+    ASSERT_FALSE(std::getline(stream, line, '\n').fail());
+    ASSERT_STREQ("----------------", line.c_str());
+
+    // no more lines
+    ASSERT_TRUE(std::getline(stream, line, '\n').fail());
 }
 
 int main(int argc, char** argv)

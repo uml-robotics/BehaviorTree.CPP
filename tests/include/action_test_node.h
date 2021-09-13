@@ -12,7 +12,7 @@ class SyncActionTest : public SyncActionNode
 
     BT::NodeStatus tick() override;
 
-    void setBoolean(bool boolean_value);
+    void setExpectedResult(NodeStatus res);
 
     int tickCount() const
     {
@@ -25,16 +25,19 @@ class SyncActionTest : public SyncActionNode
     }
 
   private:
-    bool boolean_value_;
+    NodeStatus expected_result_;
     int tick_count_;
 };
 
 class AsyncActionTest : public AsyncActionNode
 {
   public:
-    AsyncActionTest(const std::string& name, BT::Duration deadline_ms);
+    AsyncActionTest(const std::string& name, BT::Duration deadline_ms = std::chrono::milliseconds(100) );
 
-    ~AsyncActionTest();
+    virtual ~AsyncActionTest()
+    {
+        halt();
+    }
 
     // The method that is going to be executed by the thread
     BT::NodeStatus tick() override;
@@ -44,24 +47,34 @@ class AsyncActionTest : public AsyncActionNode
     // The method used to interrupt the execution of the node
     virtual void halt() override;
 
-    void setBoolean(bool boolean_value);
+    void setExpectedResult(NodeStatus res);
 
-    int tickCount() const
-    {
+    int tickCount() const {
         return tick_count_;
     }
 
-    void resetTicks()
-    {
+    int successCount() const {
+        return success_count_;
+    }
+
+    int failureCount() const {
+        return failure_count_;
+    }
+
+    void resetCounters() {
+        success_count_ = 0;
+        failure_count_ = 0;
         tick_count_ = 0;
     }
 
   private:
     // using atomic because these variables might be accessed from different threads
     BT::Duration time_;
-    std::atomic_bool boolean_value_;
+    std::atomic<NodeStatus> expected_result_;
     std::atomic<int> tick_count_;
-    std::atomic_bool stop_loop_;
+    int success_count_;
+    int failure_count_;
+
 };
 }
 

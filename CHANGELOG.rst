@@ -2,6 +2,103 @@
 Changelog for package behaviortree_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.5.6 (2021-02-03)
+------------------
+* fix issue `#227 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/227>`_
+* fix issue `#256 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/256>`_
+* Merge branch 'master' of https://github.com/BehaviorTree/BehaviorTree.CPP
+* fix issue `#250 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/250>`_
+* Fixed typos on SequenceNode.md (`#254 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/254>`_)
+* Contributors: Davide Faconti, LucasNolasco
+
+3.5.5 (2021-01-27)
+------------------
+* fix issue `#251 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/251>`_
+* Contributors: Davide Faconti
+
+3.5.4 (2020-12-10)
+------------------
+* Update bt_factory.cpp (`#245 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/245>`_)
+* Use the latest version of zmq.hpp
+* Improved switching BTs with active Groot monitoring (ZMQ logger destruction) (`#244 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/244>`_)
+  * Skip 100ms (max) wait for detached thread
+  * add {} to single line if statements
+* Update retry_node.cpp
+* fix
+* fix issue `#230 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/230>`_
+* Contributors: Davide Faconti, Florian Gramß, amangiat88
+
+3.5.3 (2020-09-10)
+------------------
+* fix issue `#228 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/228>`_ . Retry and Repeat node need to halt the child
+* better tutorial
+* Contributors: Davide Faconti
+
+3.5.2 (2020-09-02)
+------------------
+* fix warning and follow coding standard
+* docs: Small changes to tutorial 02 (`#225 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/225>`_)
+  Co-authored-by: Valerio Magnago <valerio.magnago@fraunhofer.it>
+* Merge branch 'master' of https://github.com/BehaviorTree/BehaviorTree.CPP
+* tutorial 1 fixed
+* decreasing warning level to fix issue `#220 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/220>`_
+* fix compilation
+* Allow BT factory to define clock source for TimerQueue/TimerNode (`#215 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/215>`_)
+  * Allow BT factory to define clock source for TimerQueue/TimerNode
+  * Fix unit tests
+  Co-authored-by: Cam Fulton <cfulton@symbotic.com>
+  Co-authored-by: Davide Faconti <davide.faconti@gmail.com>
+* Added delay node and wait for enter keypress node (`#182 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/182>`_)
+  * Added delay node and wait for enter press node
+  * Fixed unsigned int to int conversion bug
+  * Added a new timer to keep a track of delay timeout and return RUNNING in the meanwhile
+  * Removed wait for keypress node
+  * Review changes suggested by gramss
+  Co-authored-by: Indraneel Patil <indraneel.p@greyorange.com>
+* Update SequenceNode.md (`#211 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/211>`_)
+* add failure threshold to parallel node with tests (`#216 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/216>`_)
+* Update tutorial_05_subtrees.md
+  I believe that the API has been updated. Reflecting the same in this tutorial.
+* Contributors: Aayush Naik, Davide Faconti, Indraneel Patil, Renan Salles, Valerio Magnago, Wuqiqi123, fultoncjb
+
+3.5.1 (2020-06-11)
+------------------
+* trying to fix compilation in eloquent  Minor fix on line 19
+* Update README.md
+* more badges
+* readme updated
+* fix ros2 compilation?
+* move to github actions
+* replace dot by zero in boost version (`#197 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/197>`_)
+* Always use nonstd::string_view for binary compatibility (fix issue `#200 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/200>`_)
+* Adding ForceRunningNode Decorator (`#192 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/192>`_)
+* updated doc
+* Add XML parsing support for custom Control Nodes (`#194 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/194>`_)
+* Fix typo
+* [Windows] Compare `std::type_info` objects to check type. (`#181 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/181>`_)
+* Fix pseudocode for ReactiveFallback. (`#191 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/191>`_)
+* Contributors: Aayush Naik, Darío Hereñú, Davide Faconti, Francisco Martín Rico, G.Doisy, Sarathkrishnan Ramesh, Sean Yen, Ting Chang
+
+3.5.0 (2020-05-14)
+------------------
+* added IfThenElse and  WhileDoElse
+* issue `#190 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/190>`_
+* unit test added
+* reverting to a better solution
+* RemappedSubTree added
+* Fix issue `#188 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/188>`_
+* added function const std::string& key (issue `#183 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/183>`_)
+* Contributors: Davide Faconti, daf@blue-ocean-robotics.com
+
+* added IfThenElse and  WhileDoElse
+* issue `#190 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/190>`_
+* unit test added
+* reverting to a better solution
+* RemappedSubTree added
+* Fix issue `#188 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/188>`_
+* added function const std::string& key (issue `#183 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/183>`_)
+* Contributors: Davide Faconti, daf@blue-ocean-robotics.com
+
 3.1.1 (2019-11-10)
 ------------------
 * fix samples compilation (hopefully)

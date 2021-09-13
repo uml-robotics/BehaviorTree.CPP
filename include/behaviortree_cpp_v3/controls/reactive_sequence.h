@@ -1,4 +1,4 @@
-/* Copyright (C) 2019 Davide Faconti, Eurecat -  All Rights Reserved
+/* Copyright (C) 2020 Davide Faconti, Eurecat -  All Rights Reserved
 *
 *   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
 *   to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -21,7 +21,7 @@ namespace BT
  * @brief The ReactiveSequence is similar to a ParallelNode.
  * All the children are ticked from first to last:
  *
- * - If a child returns RUNNING, tick the next sibling.
+ * - If a child returns RUNNING, halt the remaining siblings in the sequence and return RUNNING.
  * - If a child returns SUCCESS, tick the next sibling.
  * - If a child returns FAILURE, stop and return FAILURE.
  *

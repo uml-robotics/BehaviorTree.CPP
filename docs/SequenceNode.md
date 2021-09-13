@@ -1,6 +1,6 @@
 # Sequences
 
-A __Sequence__ ticks all it's children as long as 
+A __Sequence__ ticks all its children as long as 
 they return SUCCESS. If any child returns FAILURE, the sequence is aborted.
 
 Currently the framework provides three kinds of nodes:
@@ -45,9 +45,9 @@ This tree represents the behavior of a sniper in a computer game.
 		status = RUNNING;
         // _index is a private member
 
-		while( index < number_of_children)
+		while(_index < number_of_children)
 		{
-			child_status = child[index]->tick();
+			child_status = child[_index]->tick();
 			
             if( child_status == SUCCESS ) {
                 _index++;
@@ -72,7 +72,7 @@ This tree represents the behavior of a sniper in a computer game.
 
 This node is particularly useful to continuously check Conditions; but 
 the user should also be careful when using asynchronous children, to be
-sure that thy are not ticked more often that expected.
+sure that they are not ticked more often that expected.
 
 Let's take a look at another example:
 

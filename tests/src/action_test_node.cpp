@@ -15,44 +15,47 @@
 #include <string>
 
 BT::AsyncActionTest::AsyncActionTest(const std::string& name, BT::Duration deadline_ms) :
-    AsyncActionNode(name, {})
+    AsyncActionNode(name, {}),
+  success_count_(0),
+  failure_count_(0)
 {
-    boolean_value_ = true;
+    expected_result_ = NodeStatus::SUCCESS;
     time_ = deadline_ms;
-    stop_loop_ = false;
     tick_count_ = 0;
-}
-
-BT::AsyncActionTest::~AsyncActionTest()
-{
-    halt();
 }
 
 BT::NodeStatus BT::AsyncActionTest::tick()
 {
     using std::chrono::high_resolution_clock;
     tick_count_++;
-    stop_loop_ = false;
+
     auto initial_time = high_resolution_clock::now();
 
-    while (!stop_loop_ && high_resolution_clock::now() < initial_time + time_)
+    // we simulate an asynchronous action that takes an amount of time equal to time_
+    while (!isHaltRequested() && high_resolution_clock::now() < initial_time + time_)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    if (!stop_loop_)
-    {
-        return boolean_value_ ? NodeStatus::SUCCESS : NodeStatus::FAILURE;
-    }
-    else
-    {
+    // check if we exited the while(9 loop because of the flag stop_loop_
+    if( isHaltRequested() ){
         return NodeStatus::IDLE;
     }
+
+    if( expected_result_ == NodeStatus::SUCCESS){
+        success_count_++;
+    }
+    else if( expected_result_ == NodeStatus::FAILURE){
+        failure_count_++;
+    }
+
+    return expected_result_;
 }
 
 void BT::AsyncActionTest::halt()
 {
-    stop_loop_ = true;
+    // do more cleanup here if necessary
+    AsyncActionNode::halt();
 }
 
 void BT::AsyncActionTest::setTime(BT::Duration time)
@@ -60,9 +63,9 @@ void BT::AsyncActionTest::setTime(BT::Duration time)
     time_ = time;
 }
 
-void BT::AsyncActionTest::setBoolean(bool boolean_value)
+void BT::AsyncActionTest::setExpectedResult(BT::NodeStatus res)
 {
-    boolean_value_ = boolean_value;
+    expected_result_ = res;
 }
 
 //----------------------------------------------
@@ -71,16 +74,16 @@ BT::SyncActionTest::SyncActionTest(const std::string& name) :
     SyncActionNode(name, {})
 {
     tick_count_ = 0;
-    boolean_value_ = true;
+    expected_result_ = NodeStatus::SUCCESS;
 }
 
 BT::NodeStatus BT::SyncActionTest::tick()
 {
     tick_count_++;
-    return boolean_value_ ? NodeStatus::SUCCESS : NodeStatus::FAILURE;
+    return expected_result_;
 }
 
-void BT::SyncActionTest::setBoolean(bool boolean_value)
+void BT::SyncActionTest::setExpectedResult(NodeStatus res)
 {
-    boolean_value_ = boolean_value;
+    expected_result_ = res;
 }

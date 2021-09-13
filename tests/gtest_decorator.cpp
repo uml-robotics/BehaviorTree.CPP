@@ -20,7 +20,7 @@ using std::chrono::milliseconds;
 
 struct DeadlineTest : testing::Test
 {
-    BT::TimeoutNode root;
+    BT::TimeoutNode<> root;
     BT::AsyncActionTest action;
 
     DeadlineTest() : root("deadline", 300)
@@ -28,10 +28,7 @@ struct DeadlineTest : testing::Test
     {
         root.setChild(&action);
     }
-    ~DeadlineTest()
-    {
-        haltAllActions(&root);
-    }
+    ~DeadlineTest() = default;
 };
 
 struct RepeatTest : testing::Test
@@ -43,10 +40,19 @@ struct RepeatTest : testing::Test
     {
         root.setChild(&action);
     }
-    ~RepeatTest()
+    ~RepeatTest() = default;
+};
+
+struct RepeatTestAsync : testing::Test
+{
+    BT::RepeatNode root;
+    BT::AsyncActionTest action;
+
+    RepeatTestAsync() : root("repeat", 3), action("action", milliseconds(100))
     {
-        haltAllActions(&root);
+        root.setChild(&action);
     }
+    ~RepeatTestAsync() = default;
 };
 
 struct RetryTest : testing::Test
@@ -58,15 +64,12 @@ struct RetryTest : testing::Test
     {
         root.setChild(&action);
     }
-    ~RetryTest()
-    {
-        haltAllActions(&root);
-    }
+    ~RetryTest() = default;
 };
 
 struct TimeoutAndRetry : testing::Test
 {
-    BT::TimeoutNode timeout_root;
+    BT::TimeoutNode<> timeout_root;
     BT::RetryNode retry;
     BT::SyncActionTest action;
 
@@ -77,10 +80,6 @@ struct TimeoutAndRetry : testing::Test
     {
         timeout_root.setChild(&retry);
         retry.setChild(&action);
-    }
-    ~TimeoutAndRetry()
-    {
-        haltAllActions(&timeout_root);
     }
 };
 
@@ -118,13 +117,13 @@ TEST_F(DeadlineTest, DeadlineNotTriggeredTest)
 
 TEST_F(RetryTest, RetryTestA)
 {
-    action.setBoolean(false);
+    action.setExpectedResult(NodeStatus::FAILURE);
 
     root.executeTick();
     ASSERT_EQ(NodeStatus::FAILURE, root.status());
     ASSERT_EQ(3, action.tickCount() );
 
-    action.setBoolean(true);
+    action.setExpectedResult(NodeStatus::SUCCESS);
     action.resetTicks();
 
     root.executeTick();
@@ -132,9 +131,41 @@ TEST_F(RetryTest, RetryTestA)
     ASSERT_EQ(1, action.tickCount() );
 }
 
+
+TEST_F(RepeatTestAsync, RepeatTestAsync)
+{
+    action.setExpectedResult(NodeStatus::SUCCESS);
+
+    auto res = root.executeTick();
+
+    while(res == NodeStatus::RUNNING){
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        res =  root.executeTick();
+    }
+
+    ASSERT_EQ(NodeStatus::SUCCESS, root.status());
+    ASSERT_EQ(3, action.successCount() );
+    ASSERT_EQ(0, action.failureCount() );
+
+    //-------------------
+    action.setExpectedResult(NodeStatus::FAILURE);
+    action.resetCounters();
+
+    res = root.executeTick();
+    while(res == NodeStatus::RUNNING){
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        res =  root.executeTick();
+    }
+
+    ASSERT_EQ(NodeStatus::FAILURE, root.status());
+    ASSERT_EQ(0, action.successCount() );
+    ASSERT_EQ(1, action.failureCount() );
+
+}
+
 TEST_F(RepeatTest, RepeatTestA)
 {
-    action.setBoolean(false);
+    action.setExpectedResult(NodeStatus::FAILURE);
 
     root.executeTick();
     ASSERT_EQ(NodeStatus::FAILURE, root.status());
@@ -142,7 +173,7 @@ TEST_F(RepeatTest, RepeatTestA)
 
     //-------------------
     action.resetTicks();
-    action.setBoolean(true);
+    action.setExpectedResult(NodeStatus::SUCCESS);
 
     root.executeTick();
     ASSERT_EQ(NodeStatus::SUCCESS, root.status());
@@ -152,7 +183,7 @@ TEST_F(RepeatTest, RepeatTestA)
 // https://github.com/BehaviorTree/BehaviorTree.CPP/issues/57
 TEST_F(TimeoutAndRetry, Issue57)
 {
-    action.setBoolean( false );
+    action.setExpectedResult(NodeStatus::FAILURE);
 
     auto t1 = std::chrono::high_resolution_clock::now();
 

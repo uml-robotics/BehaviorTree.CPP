@@ -1,4 +1,4 @@
-/*  Copyright (C) 2018-2019 Davide Faconti, Eurecat -  All Rights Reserved
+/*  Copyright (C) 2018-2020 Davide Faconti, Eurecat -  All Rights Reserved
 *
 *   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
 *   to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -70,7 +70,7 @@ void applyRecursiveVisitor(const TreeNode* node,
 {
     if (!node)
     {
-        throw LogicError("One of the children of a DecoratorNode or ControlNode is nulltr");
+        throw LogicError("One of the children of a DecoratorNode or ControlNode is nullptr");
     }
 
     visitor(node);
@@ -92,7 +92,7 @@ void applyRecursiveVisitor(TreeNode* node, const std::function<void(TreeNode*)>&
 {
     if (!node)
     {
-        throw LogicError("One of the children of a DecoratorNode or ControlNode is nulltr");
+        throw LogicError("One of the children of a DecoratorNode or ControlNode is nullptr");
     }
 
     visitor(node);
@@ -106,25 +106,27 @@ void applyRecursiveVisitor(TreeNode* node, const std::function<void(TreeNode*)>&
     }
     else if (auto decorator = dynamic_cast<BT::DecoratorNode*>(node))
     {
-        applyRecursiveVisitor(decorator->child(), visitor);
+        if( decorator->child() ){
+            applyRecursiveVisitor(decorator->child(), visitor);
+        }
     }
 }
 
-void printTreeRecursively(const TreeNode* root_node)
+void printTreeRecursively(const TreeNode* root_node, std::ostream& stream)
 {
     std::function<void(unsigned, const BT::TreeNode*)> recursivePrint;
 
-    recursivePrint = [&recursivePrint](unsigned indent, const BT::TreeNode* node) {
+    recursivePrint = [&recursivePrint, &stream](unsigned indent, const BT::TreeNode* node) {
         for (unsigned i = 0; i < indent; i++)
         {
-            std::cout << "   ";
+            stream << "   ";
         }
         if (!node)
         {
-            std::cout << "!nullptr!" << std::endl;
+            stream << "!nullptr!" << std::endl;
             return;
         }
-        std::cout << node->short_description() << std::endl;
+        stream << node->short_description() << std::endl;
         indent++;
 
         if (auto control = dynamic_cast<const BT::ControlNode*>(node))
@@ -140,9 +142,9 @@ void printTreeRecursively(const TreeNode* root_node)
         }
     };
 
-    std::cout << "----------------" << std::endl;
+    stream << "----------------" << std::endl;
     recursivePrint(0, root_node);
-    std::cout << "----------------" << std::endl;
+    stream << "----------------" << std::endl;
 }
 
 void buildSerializedStatusSnapshot(TreeNode* root_node, SerializedTreeStatus& serialized_buffer)
@@ -154,17 +156,6 @@ void buildSerializedStatusSnapshot(TreeNode* root_node, SerializedTreeStatus& se
             std::make_pair(node->UID(), static_cast<uint8_t>(node->status())));
     };
 
-    applyRecursiveVisitor(root_node, visitor);
-}
-
-void haltAllActions(TreeNode* root_node)
-{
-    auto visitor = [](TreeNode* node) {
-        if (auto action = dynamic_cast<AsyncActionNode*>(node))
-        {
-            action->stopAndJoinThread();
-        }
-    };
     applyRecursiveVisitor(root_node, visitor);
 }
 
