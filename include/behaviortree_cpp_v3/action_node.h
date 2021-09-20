@@ -163,11 +163,6 @@ class SimpleAsyncActionNode : public AsyncActionNode
   protected:
     virtual NodeStatus tick() override final;
 
-    virtual void halt() override
-    {
-      //stopAndJoinThread();
-    }
-
     TickFunctor tick_functor_;
 };
 

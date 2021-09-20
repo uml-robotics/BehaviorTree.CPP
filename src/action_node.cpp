@@ -188,7 +188,8 @@ NodeStatus BT::AsyncActionNode::executeTick()
         thread_handle_ = std::async(std::launch::async, [this]() {
 
             try {
-                setStatus(tick());
+                NodeStatus result = tick();
+                setStatus(halt_requested_ ? NodeStatus::FAILURE : result);
             }
             catch (std::exception&)
             {
