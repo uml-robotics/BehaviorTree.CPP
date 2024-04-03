@@ -13,3 +13,8 @@ CMakeSettings.json
 .DS_Store
 .idea/
 cmake-build-debug/
+
+# pixi environments
+.pixi
+
+CMakeUserPresets.json
