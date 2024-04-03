@@ -149,6 +149,8 @@ public:
 
   [[nodiscard]] NodeStatus status() const;
 
+  bool has_failed() const;
+
   /// Name of the instance, not the type
   [[nodiscard]] const std::string& name() const;
 
@@ -290,6 +292,22 @@ public:
   [[nodiscard]] static Expected<StringView> getRemappedKey(StringView port_name,
                                                            StringView remapped_port);
 
+  void setParent(TreeNode *parent) {
+      parent_ = parent;
+  }
+
+  TreeNode* getParent() const {
+      return parent_;
+  }
+
+  std::string short_description() const {
+      std::string str = name();
+      if (str.empty()) {
+          str = config().uid;
+      }
+      return str;
+  }
+
   /// Notify that the tree should be ticked again()
   void emitWakeUpSignal();
 
@@ -358,6 +376,9 @@ private:
 
   Expected<NodeStatus> checkPreConditions();
   void checkPostConditions(NodeStatus status);
+
+  TreeNode *parent_;
+  bool failed_ = false;
 
   /// The method used to interrupt the execution of a RUNNING node.
   /// Only Async nodes that may return RUNNING should implement it.

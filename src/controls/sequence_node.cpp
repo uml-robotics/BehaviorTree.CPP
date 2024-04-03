@@ -33,10 +33,28 @@ void SequenceNode::halt()
   ControlNode::halt();
 }
 
+TreeNode* SequenceNode::getNextSibling(TreeNode* child) {
+    ptrdiff_t i = distance(children_nodes_.begin(), find(children_nodes_.begin(), children_nodes_.end(), child));
+    if ( i + 1 < childrenCount()) {
+        return children_nodes_.at(i + 1);
+    }
+    else {
+        return nullptr;
+    }
+}
+
+TreeNode* SequenceNode::getNextSibling(TreeNode* child) {
+    ptrdiff_t i = distance(children_nodes_.begin(), find(children_nodes_.begin(), children_nodes_.end(), child));
+    if ( i + 1 < childrenCount()) {
+        return children_nodes_.at(i + 1);
+    }
+    else {
+        return nullptr;
+    }
+}
+
 NodeStatus SequenceNode::tick()
 {
-  const size_t children_count = children_nodes_.size();
-
   if(status() == NodeStatus::IDLE)
   {
     all_skipped_ = true;
@@ -44,8 +62,9 @@ NodeStatus SequenceNode::tick()
 
   setStatus(NodeStatus::RUNNING);
 
-  while(current_child_idx_ < children_count)
-  {
+  TreeNode* current_child_node = children_nodes_[0];
+
+  do {
     TreeNode* current_child_node = children_nodes_[current_child_idx_];
 
     auto prev_status = current_child_node->status();
@@ -87,15 +106,14 @@ NodeStatus SequenceNode::tick()
       case NodeStatus::IDLE: {
         throw LogicError("[", name(), "]: A children should not return IDLE");
       }
-    }  // end switch
-  }    // end while loop
+    }
+  } while((current_child_node = getNextSibling(current_child_node)) != nullptr);
 
   // The entire while loop completed. This means that all the children returned SUCCESS.
-  if(current_child_idx_ == children_count)
-  {
-    resetChildren();
-    current_child_idx_ = 0;
-  }
+  //haltChildren(0);
+  resetChildren();
+  current_child_idx_ = 0;
+  
   // Skip if ALL the nodes have been skipped
   return all_skipped_ ? NodeStatus::SKIPPED : NodeStatus::SUCCESS;
 }

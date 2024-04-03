@@ -155,6 +155,9 @@ void TreeNode::setStatus(NodeStatus new_status)
                        "]: you are not allowed to set manually the status to IDLE. "
                        "If you know what you are doing (?) use resetStatus() instead.");
   }
+  if(new_status == NodeStatus::FAILURE) {
+    this->failed_ = true;
+  }
 
   NodeStatus prev_status;
   {
@@ -276,6 +279,10 @@ NodeStatus TreeNode::status() const
 {
   std::lock_guard<std::mutex> lock(_p->state_mutex);
   return _p->status;
+}
+
+bool TreeNode::has_failed() const {
+    return failed_;
 }
 
 NodeStatus TreeNode::waitValidStatus()
