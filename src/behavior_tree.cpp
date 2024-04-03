@@ -15,7 +15,7 @@
 
 namespace BT
 {
-
+  
 void applyRecursiveVisitorSelectively(const TreeNode* node, const std::function<bool(const TreeNode*)>& visitor)
 {
     if (!node)
@@ -63,7 +63,6 @@ void applyRecursiveVisitorSelectively(TreeNode* node, const std::function<bool(T
         applyRecursiveVisitorSelectively(decorator->child(), visitor);
     }
 }
-
 
 void applyRecursiveVisitor(const TreeNode* node,
                            const std::function<void(const TreeNode*)>& visitor)
@@ -117,18 +116,18 @@ void printTreeRecursively(const TreeNode* root_node, std::ostream& stream)
 {
   std::function<void(unsigned, const BT::TreeNode*)> recursivePrint;
 
-    recursivePrint = [&recursivePrint, &stream](unsigned indent, const BT::TreeNode* node) {
-        for (unsigned i = 0; i < indent; i++)
-        {
-            stream << "   ";
-        }
-        if (!node)
-        {
-            stream << "!nullptr!" << std::endl;
-            return;
-        }
-        stream << node->short_description() << std::endl;
-        indent++;
+  recursivePrint = [&recursivePrint, &stream](unsigned indent, const BT::TreeNode* node) {
+    for(unsigned i = 0; i < indent; i++)
+    {
+      stream << "   ";
+    }
+    if(!node)
+    {
+      stream << "!nullptr!" << std::endl;
+      return;
+    }
+    stream << node->short_description() << std::endl;
+    indent++;
 
     if(auto control = dynamic_cast<const BT::ControlNode*>(node))
     {

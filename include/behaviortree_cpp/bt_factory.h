@@ -233,8 +233,8 @@ public:
     auto manifest = CreateManifest<T>(ID);
     registerBuilder(manifest, builder);
   }
-
-    /**
+  
+/**
     * @brief registerSimpleAction help you register nodes of type SimpleActionNode.
     *
     * @param ID                 registration ID
@@ -245,7 +245,6 @@ public:
     void registerSimpleAction(const std::string& ID,
                               const std::function<bool(TreeNode&)>& tick_bool_functor,
                               PortsList ports = {});
-
   /**
     * @brief registerSimpleAction help you register nodes of type SimpleActionNode.
     *

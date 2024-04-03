@@ -155,8 +155,8 @@ void TreeNode::setStatus(NodeStatus new_status)
                        "]: you are not allowed to set manually the status to IDLE. "
                        "If you know what you are doing (?) use resetStatus() instead.");
   }
-  if(new_status == NodeStatus::FAILURE) {
-    this->failed_ = true;
+  if (new_status == NodeStatus::FAILURE) {
+      this->failed_ = true;
   }
 
   NodeStatus prev_status;

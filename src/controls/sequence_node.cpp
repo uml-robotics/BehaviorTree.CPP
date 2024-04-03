@@ -43,18 +43,10 @@ TreeNode* SequenceNode::getNextSibling(TreeNode* child) {
     }
 }
 
-TreeNode* SequenceNode::getNextSibling(TreeNode* child) {
-    ptrdiff_t i = distance(children_nodes_.begin(), find(children_nodes_.begin(), children_nodes_.end(), child));
-    if ( i + 1 < childrenCount()) {
-        return children_nodes_.at(i + 1);
-    }
-    else {
-        return nullptr;
-    }
-}
-
 NodeStatus SequenceNode::tick()
 {
+  const size_t children_count = children_nodes_.size();
+
   if(status() == NodeStatus::IDLE)
   {
     all_skipped_ = true;
@@ -63,10 +55,7 @@ NodeStatus SequenceNode::tick()
   setStatus(NodeStatus::RUNNING);
 
   TreeNode* current_child_node = children_nodes_[0];
-
   do {
-    TreeNode* current_child_node = children_nodes_[current_child_idx_];
-
     auto prev_status = current_child_node->status();
     const NodeStatus child_status = current_child_node->executeTick();
 
@@ -113,7 +102,6 @@ NodeStatus SequenceNode::tick()
   //haltChildren(0);
   resetChildren();
   current_child_idx_ = 0;
-  
   // Skip if ALL the nodes have been skipped
   return all_skipped_ ? NodeStatus::SKIPPED : NodeStatus::SUCCESS;
 }
