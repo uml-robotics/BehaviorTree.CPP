@@ -170,6 +170,30 @@ void BehaviorTreeFactory::registerSimpleCondition(
   registerBuilder(manifest, builder);
 }
 
+void BehaviorTreeFactory::registerSimpleAssumptionChecker(const std::string& ID,
+                                                  const std::function<bool(TreeNode&)>& tick_bool_functor,
+                                                  PortsList ports)
+{
+    auto tick_functor = [tick_bool_functor](TreeNode& parent_node) -> NodeStatus {
+        return tick_bool_functor(parent_node) ? NodeStatus::SUCCESS : NodeStatus::FAILURE;
+    };
+
+    registerSimpleAssumptionChecker(ID, tick_functor, ports);
+}
+
+void BehaviorTreeFactory::registerSimpleAssumptionChecker(
+    const std::string& ID, const SimpleAssumptionCheckerNode::TickFunctor& tick_functor,
+    PortsList ports)
+{
+  NodeBuilder builder = [tick_functor, ID](const std::string& name,
+                                           const NodeConfig& config) {
+    return std::make_unique<SimpleAssumptionCheckerNode>(name, tick_functor, config);
+  };
+
+  TreeNodeManifest manifest = { NodeType::ASSUMPTIONCHECKER, ID, std::move(ports), {} };
+  registerBuilder(manifest, builder);
+}
+
 void BehaviorTreeFactory::registerSimpleAction(const std::string& ID,
                                                const std::function<bool(TreeNode&)>& tick_bool_functor,
                                                PortsList ports)

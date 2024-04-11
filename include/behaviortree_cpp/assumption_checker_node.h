@@ -11,34 +11,29 @@
 *   WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef CONDITIONNODE_H
-#define CONDITIONNODE_H
+#ifndef ASSUMPTIONCHECKERNODE_H
+#define ASSUMPTIONCHECKERNODE_H
 
 #include "leaf_node.h"
+#include "behaviortree_cpp/condition_node.h"
 
 namespace BT
 {
-class ConditionNode : public LeafNode
+class AssumptionCheckerNode : public ConditionNode
 {
 public:
-  ConditionNode(const std::string& name, const NodeConfig& config);
+  AssumptionCheckerNode(const std::string& name, const NodeConfig& config);
 
-  virtual ~ConditionNode() override = default;
+  virtual ~AssumptionCheckerNode() override = default;
 
-  //Do nothing
-  virtual void halt() override final
+  virtual NodeType type() const override final
   {
-    resetStatus();
-  }
-
-  virtual NodeType type() const override
-  {
-    return NodeType::CONDITION;
+    return NodeType::ASSUMPTIONCHECKER;
   }
 };
 
 /**
- * @brief The SimpleConditionNode provides an easy to use ConditionNode.
+ * @brief The SimpleAssumptionCheckerNode provides an easy to use AssumptionCheckerNode.
  * The user should simply provide a callback with this signature
  *
  *    BT::NodeStatus functionName(void)
@@ -47,16 +42,16 @@ public:
  *
  * Using lambdas or std::bind it is easy to pass a pointer to a method.
  */
-class SimpleConditionNode : public ConditionNode
+class SimpleAssumptionCheckerNode : public AssumptionCheckerNode
 {
 public:
   using TickFunctor = std::function<NodeStatus(TreeNode&)>;
 
   // You must provide the function to call when tick() is invoked
-  SimpleConditionNode(const std::string& name, TickFunctor tick_functor,
+  SimpleAssumptionCheckerNode(const std::string& name, TickFunctor tick_functor,
                       const NodeConfig& config);
 
-  ~SimpleConditionNode() override = default;
+  ~SimpleAssumptionCheckerNode() override = default;
 
 protected:
   virtual NodeStatus tick() override;

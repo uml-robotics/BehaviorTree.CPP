@@ -11,58 +11,35 @@
 *   WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef CONDITIONNODE_H
-#define CONDITIONNODE_H
-
-#include "leaf_node.h"
+#include "behaviortree_cpp/assumption_checker_node.h"
 
 namespace BT
 {
-class ConditionNode : public LeafNode
+AssumptionCheckerNode::AssumptionCheckerNode(const std::string& name, const NodeConfig& config)
+  : ConditionNode::ConditionNode(name, config)
+{}
+
+SimpleAssumptionCheckerNode::SimpleAssumptionCheckerNode(const std::string& name,
+                                         TickFunctor tick_functor,
+                                         const NodeConfig& config)
+  : AssumptionCheckerNode(name, config), tick_functor_(std::move(tick_functor))
+{}
+
+NodeStatus SimpleAssumptionCheckerNode::tick()
 {
-public:
-  ConditionNode(const std::string& name, const NodeConfig& config);
+  NodeStatus prev_status = status();
 
-  virtual ~ConditionNode() override = default;
-
-  //Do nothing
-  virtual void halt() override final
+  if (prev_status == NodeStatus::IDLE)
   {
-    resetStatus();
+      setStatus(NodeStatus::RUNNING);
+      prev_status = NodeStatus::RUNNING;
   }
 
-  virtual NodeType type() const override
+  NodeStatus status = tick_functor_(*this);
+  if (status != prev_status)
   {
-    return NodeType::CONDITION;
+      setStatus(status);
   }
-};
-
-/**
- * @brief The SimpleConditionNode provides an easy to use ConditionNode.
- * The user should simply provide a callback with this signature
- *
- *    BT::NodeStatus functionName(void)
- *
- * This avoids the hassle of inheriting from a ActionNode.
- *
- * Using lambdas or std::bind it is easy to pass a pointer to a method.
- */
-class SimpleConditionNode : public ConditionNode
-{
-public:
-  using TickFunctor = std::function<NodeStatus(TreeNode&)>;
-
-  // You must provide the function to call when tick() is invoked
-  SimpleConditionNode(const std::string& name, TickFunctor tick_functor,
-                      const NodeConfig& config);
-
-  ~SimpleConditionNode() override = default;
-
-protected:
-  virtual NodeStatus tick() override;
-
-  TickFunctor tick_functor_;
-};
+  return status;
+}
 }  // namespace BT
-
-#endif

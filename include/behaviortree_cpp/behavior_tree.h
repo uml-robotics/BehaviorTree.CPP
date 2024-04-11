@@ -26,6 +26,7 @@
 
 #include "behaviortree_cpp/action_node.h"
 #include "behaviortree_cpp/condition_node.h"
+#include "behaviortree_cpp/assumption_checker_node.h"
 
 #include "behaviortree_cpp/decorators/inverter_node.h"
 #include "behaviortree_cpp/decorators/retry_node.h"
@@ -95,6 +96,7 @@ inline NodeType getType()
   // clang-format off
     if( std::is_base_of<ActionNodeBase, T>::value )        return NodeType::ACTION;
     if( std::is_base_of<ConditionNode, T>::value )         return NodeType::CONDITION;
+    if( std::is_base_of<AssumptionCheckerNode, T>::value ) return NodeType::ASSUMPTIONCHECKER;
     if( std::is_base_of<SubTreeNode, T>::value )           return NodeType::SUBTREE;
     if( std::is_base_of<DecoratorNode, T>::value )         return NodeType::DECORATOR;
     if( std::is_base_of<ControlNode, T>::value )           return NodeType::CONTROL;
