@@ -332,7 +332,7 @@ void BehaviorTreeFactory::clearRegisteredBehaviorTrees()
 }
 
 std::unique_ptr<TreeNode> BehaviorTreeFactory::instantiateTreeNode(
-    const std::string& name, const std::string& ID, const NodeConfig& config) const
+    const std::string& name, const std::string& ID, const std::string& description, const NodeConfig& config) const
 {
   auto idNotFound = [this, ID] {
     std::cerr << ID << " not included in this list:" << std::endl;
@@ -400,6 +400,7 @@ std::unique_ptr<TreeNode> BehaviorTreeFactory::instantiateTreeNode(
 
   node->setRegistrationID(ID);
   node->config().enums = _p->scripting_enums;
+  node->setShortDescription(description);
 
   auto AssignConditions = [](auto& conditions, auto& executors) {
     for(const auto& [cond_id, script] : conditions)

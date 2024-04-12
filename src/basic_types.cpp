@@ -433,7 +433,7 @@ bool IsAllowedPortName(StringView str)
   {
     return false;
   }
-  if(str == "name" || str == "ID")
+  if(str == "name" || str == "ID" || str == "description")
   {
     return false;
   }

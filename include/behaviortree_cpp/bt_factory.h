@@ -360,7 +360,7 @@ public:
      * @return         new node.
      */
   [[nodiscard]] std::unique_ptr<TreeNode> instantiateTreeNode(
-      const std::string& name, const std::string& ID, const NodeConfig& config) const;
+      const std::string& name, const std::string& ID, const std::string& description, const NodeConfig& config) const;
 
   /** registerNodeType where you explicitly pass the list of ports.
    *  Doesn't require the implementation of static method providedPorts()

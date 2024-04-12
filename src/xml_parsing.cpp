@@ -629,6 +629,9 @@ TreeNode::Ptr XMLParser::PImpl::createNodeFromXML(const XMLElement* element,
   const char* attr_name = element->Attribute("name");
   const std::string instance_name = (attr_name != nullptr) ? attr_name : type_ID;
 
+  const char* attr_description = element->Attribute("description");
+  const std::string instance_description = (attr_description != nullptr) ? attr_description : instance_name;
+
   const TreeNodeManifest* manifest = nullptr;
 
   auto manifest_it = factory.manifests().find(type_ID);
@@ -718,7 +721,7 @@ TreeNode::Ptr XMLParser::PImpl::createNodeFromXML(const XMLElement* element,
   {
     config.input_ports = port_remap;
     new_node =
-        factory.instantiateTreeNode(instance_name, toStr(NodeType::SUBTREE), config);
+        factory.instantiateTreeNode(instance_name, toStr(NodeType::SUBTREE), instance_description, config);
     auto subtree_node = dynamic_cast<SubTreeNode*>(new_node.get());
     subtree_node->setSubtreeID(type_ID);
   }
@@ -832,7 +835,7 @@ TreeNode::Ptr XMLParser::PImpl::createNodeFromXML(const XMLElement* element,
       }
     }
 
-    new_node = factory.instantiateTreeNode(instance_name, type_ID, config);
+    new_node = factory.instantiateTreeNode(instance_name, type_ID, instance_description, config);
   }
 
   // add the pointer of this node to the parent

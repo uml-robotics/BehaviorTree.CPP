@@ -328,12 +328,13 @@ public:
       return parent_;
   }
 
-  std::string short_description() const {
-      std::string str = name();
-      if (str.empty()) {
-          str = config().uid;
-      }
-      return str;
+  void setShortDescription(StringView description)
+  {
+      description_.assign(description.data(), description.size());
+  }
+
+  std::string getShortDescription() const {
+      return description_;
   }
 
 [[nodiscard]] NodeConfig& config();
@@ -383,6 +384,7 @@ private:
   virtual void halt() = 0;
 
    TreeNode *parent_;
+   std::string description_;
    bool failed_ = false;
 };
 
