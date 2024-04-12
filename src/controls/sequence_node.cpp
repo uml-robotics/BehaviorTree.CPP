@@ -99,7 +99,6 @@ NodeStatus SequenceNode::tick()
   } while((current_child_node = getNextSibling(current_child_node)) != nullptr);
 
   // The entire while loop completed. This means that all the children returned SUCCESS.
-  //haltChildren(0);
   resetChildren();
   current_child_idx_ = 0;
   // Skip if ALL the nodes have been skipped
