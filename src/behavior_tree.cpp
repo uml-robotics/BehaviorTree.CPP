@@ -126,7 +126,7 @@ void printTreeRecursively(const TreeNode* root_node, std::ostream& stream)
       stream << "!nullptr!" << std::endl;
       return;
     }
-    stream << node->getShortDescription() << std::endl;
+    stream << node->name() << std::endl;
     indent++;
 
     if(auto control = dynamic_cast<const BT::ControlNode*>(node))
