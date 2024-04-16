@@ -61,6 +61,8 @@ using StringView = std::string_view;
 
 bool StartWith(StringView str, StringView prefix);
 
+bool StartWith(StringView str, char prefix);
+
 // vector of key/value pairs
 using KeyValueVector = std::vector<std::pair<std::string, std::string>>;
 
@@ -330,6 +332,14 @@ using Optional = nonstd::expected<T, std::string>;
  *
  * */
 using Result = Expected<std::monostate>;
+
+struct Timestamp
+{
+  uint64_t seq = 0;
+  std::chrono::nanoseconds stamp = std::chrono::nanoseconds(0);
+};
+
+using ResultStamped = Expected<Timestamp>;
 
 [[nodiscard]] bool IsAllowedPortName(StringView str);
 

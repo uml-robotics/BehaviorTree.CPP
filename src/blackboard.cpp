@@ -1,4 +1,5 @@
 #include "behaviortree_cpp/blackboard.h"
+#include <unordered_set>
 #include "behaviortree_cpp/json_export.h"
 
 namespace BT
@@ -45,6 +46,19 @@ Any* Blackboard::getAny(const std::string& key)
 const std::shared_ptr<Blackboard::Entry>
 Blackboard::getEntry(const std::string& key) const
 {
+  // special syntax: "@" will always refer to the root BB
+  if(StartWith(key, '@'))
+  {
+    if(auto parent = parent_bb_.lock())
+    {
+      return parent->getEntry(key);
+    }
+    else
+    {
+      return getEntry(key.substr(1, key.size() - 1));
+    }
+  }
+
   std::unique_lock<std::mutex> lock(mutex_);
   auto it = storage_.find(key);
   if(it != storage_.end())
@@ -70,46 +84,13 @@ Blackboard::getEntry(const std::string& key) const
 
 std::shared_ptr<Blackboard::Entry> Blackboard::getEntry(const std::string& key)
 {
-  std::unique_lock<std::mutex> lock(mutex_);
-  auto it = storage_.find(key);
-  if(it != storage_.end())
-  {
-    return it->second;
-  }
-
-  // not found. Try autoremapping
-  if(auto parent = parent_bb_.lock())
-  {
-    auto remap_it = internal_to_external_.find(key);
-    if(remap_it != internal_to_external_.cend())
-    {
-      auto const& new_key = remap_it->second;
-      auto entry = parent->getEntry(new_key);
-      if(entry)
-      {
-        storage_.insert({ key, entry });
-      }
-      return entry;
-    }
-    if(autoremapping_ && !IsPrivateKey(key))
-    {
-      auto entry = parent->getEntry(key);
-      if(entry)
-      {
-        storage_.insert({ key, entry });
-      }
-      return entry;
-    }
-  }
-  return {};
+  return static_cast<const Blackboard&>(*this).getEntry(key);
 }
 
 const TypeInfo* Blackboard::entryInfo(const std::string& key)
 {
-  std::unique_lock<std::mutex> lock(mutex_);
-
-  auto it = storage_.find(key);
-  return (it == storage_.end()) ? nullptr : &(it->second->info);
+  auto entry = getEntry(key);
+  return (!entry) ? nullptr : &(entry->info);
 }
 
 void Blackboard::addSubtreeRemapping(StringView internal, StringView external)
@@ -167,20 +148,65 @@ std::recursive_mutex& Blackboard::entryMutex() const
 
 void Blackboard::createEntry(const std::string& key, const TypeInfo& info)
 {
-  createEntryImpl(key, info);
+  if(StartWith(key, '@'))
+  {
+    if(auto parent = parent_bb_.lock())
+    {
+      parent->createEntry(key, info);
+    }
+    else
+    {
+      createEntryImpl(key.substr(1, key.size() - 1), info);
+    }
+  }
+  else
+  {
+    createEntryImpl(key, info);
+  }
 }
 
 void Blackboard::cloneInto(Blackboard& dst) const
 {
-  std::unique_lock lk(dst.mutex_);
-  dst.storage_.clear();
+  std::unique_lock lk1(mutex_);
+  std::unique_lock lk2(dst.mutex_);
 
-  for(const auto& [key, entry] : storage_)
+  // keys that are not updated must be removed.
+  std::unordered_set<std::string> keys_to_remove;
+  auto& dst_storage = dst.storage_;
+  for(const auto& [key, _] : dst_storage)
   {
-    auto new_entry = std::make_shared<Entry>(entry->info);
-    new_entry->value = entry->value;
-    new_entry->string_converter = entry->string_converter;
-    dst.storage_.insert({ key, new_entry });
+    keys_to_remove.insert(key);
+  }
+
+  // update or create entries in dst_storage
+  for(const auto& [src_key, src_entry] : storage_)
+  {
+    keys_to_remove.erase(src_key);
+
+    auto it = dst_storage.find(src_key);
+    if(it != dst_storage.end())
+    {
+      // overwite
+      auto& dst_entry = it->second;
+      dst_entry->string_converter = src_entry->string_converter;
+      dst_entry->value = src_entry->value;
+      dst_entry->info = src_entry->info;
+      dst_entry->sequence_id++;
+      dst_entry->stamp = std::chrono::steady_clock::now().time_since_epoch();
+    }
+    else
+    {
+      // create new
+      auto new_entry = std::make_shared<Entry>(src_entry->info);
+      new_entry->value = src_entry->value;
+      new_entry->string_converter = src_entry->string_converter;
+      dst_storage.insert({ src_key, new_entry });
+    }
+  }
+
+  for(const auto& key : keys_to_remove)
+  {
+    dst_storage.erase(key);
   }
 }
 
@@ -271,6 +297,16 @@ void ImportBlackboardFromJSON(const nlohmann::json& json, Blackboard& blackboard
       entry->value = res->first;
     }
   }
+}
+
+Blackboard::Entry& Blackboard::Entry::operator=(const Entry& other)
+{
+  value = other.value;
+  info = other.info;
+  string_converter = other.string_converter;
+  sequence_id = other.sequence_id;
+  stamp = other.stamp;
+  return *this;
 }
 
 }  // namespace BT
