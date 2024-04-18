@@ -6,14 +6,11 @@
 
 namespace BT
 {
-class InteractionNode : public SyncActionNode
+class InteractionNode : public ActionNodeBase
 {
 public:
   InteractionNode(const std::string& name, const NodeConfig& config);
   ~InteractionNode() override = default;
-
-  /// throws if the derived class return RUNNING.
-  virtual NodeStatus executeTick() override;
 
   virtual NodeType type() const override final
   {

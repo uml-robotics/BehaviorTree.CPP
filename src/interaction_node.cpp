@@ -3,6 +3,7 @@
 namespace BT
 {
 InteractionNode::InteractionNode(const std::string& name, const NodeConfig& config)
-  : SyncActionNode(name, config)
+  : ActionNodeBase(name, config)
 {}
+
 }
