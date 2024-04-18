@@ -38,7 +38,7 @@ public:
   ActionNodeBase(const std::string& name, const NodeConfig& config);
   ~ActionNodeBase() override = default;
 
-  virtual NodeType type() const override final
+  virtual NodeType type() const override
   {
     return NodeType::ACTION;
   }
