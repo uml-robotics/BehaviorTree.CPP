@@ -82,6 +82,7 @@ add_subdirectory(3rdparty/lexy)
 
 list(APPEND BT_SOURCE
     src/action_node.cpp
+    src/interaction_node.cpp
     src/basic_types.cpp
     src/behavior_tree.cpp
     src/blackboard.cpp
