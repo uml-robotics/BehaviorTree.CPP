@@ -95,8 +95,9 @@ BehaviorTreeFactory::BehaviorTreeFactory() : _p(new PImpl)
   registerNodeType<LoopNode<double>>("LoopDouble");
   registerNodeType<LoopNode<std::string>>("LoopString");
 
-  registerNodeType<SkipUnlessUpdated>("SkipUnlessUpdated");
-  registerNodeType<WaitValueUpdate>("WaitValueUpdate");
+  registerNodeType<EntryUpdatedAction>("WasEntryUpdated");
+  registerNodeType<EntryUpdatedDecorator>("SkipUnlessUpdated", NodeStatus::SKIPPED);
+  registerNodeType<EntryUpdatedDecorator>("WaitValueUpdate", NodeStatus::RUNNING);
 
   for(const auto& it : _p->builders)
   {
@@ -371,7 +372,7 @@ std::unique_ptr<TreeNode> BehaviorTreeFactory::instantiateTreeNode(
         }
         else
         {
-          throw RuntimeError("Substituted Node ID not found");
+          throw RuntimeError("Substituted Node ID [", *substituted_ID, "] not found");
         }
         substituted = true;
         break;
@@ -379,9 +380,7 @@ std::unique_ptr<TreeNode> BehaviorTreeFactory::instantiateTreeNode(
       else if(const auto test_config = std::get_if<TestNodeConfig>(&rule))
       {
         // second case, the varian is a TestNodeConfig
-        auto test_node = new TestNode(name, config);
-        test_node->setConfig(*test_config);
-
+        auto test_node = new TestNode(name, config, *test_config);
         node.reset(test_node);
         substituted = true;
         break;
@@ -536,8 +535,8 @@ void BehaviorTreeFactory::loadSubstitutionRuleFromJSON(const std::string& json_t
   {
     auto& config = configs[name];
 
-    auto status = test_config.at("return_status").get<std::string>();
-    config.return_status = convertFromString<NodeStatus>(status);
+    auto return_status = test_config.at("return_status").get<std::string>();
+    config.return_status = convertFromString<NodeStatus>(return_status);
     if(test_config.contains("async_delay"))
     {
       config.async_delay =
@@ -546,6 +545,14 @@ void BehaviorTreeFactory::loadSubstitutionRuleFromJSON(const std::string& json_t
     if(test_config.contains("post_script"))
     {
       config.post_script = test_config["post_script"].get<std::string>();
+    }
+    if(test_config.contains("success_script"))
+    {
+      config.success_script = test_config["success_script"].get<std::string>();
+    }
+    if(test_config.contains("failure_script"))
+    {
+      config.failure_script = test_config["failure_script"].get<std::string>();
     }
   }
 
@@ -662,20 +669,12 @@ Blackboard::Ptr Tree::rootBlackboard()
 
 void Tree::applyVisitor(const std::function<void(const TreeNode*)>& visitor)
 {
-  for(auto const& subtree : subtrees)
-  {
-    BT::applyRecursiveVisitor(static_cast<const TreeNode*>(subtree->nodes.front().get()),
-                              visitor);
-  }
+  BT::applyRecursiveVisitor(static_cast<const TreeNode*>(rootNode()), visitor);
 }
 
 void Tree::applyVisitor(const std::function<void(TreeNode*)>& visitor)
 {
-  for(auto const& subtree : subtrees)
-  {
-    BT::applyRecursiveVisitor(static_cast<TreeNode*>(subtree->nodes.front().get()),
-                              visitor);
-  }
+  BT::applyRecursiveVisitor(static_cast<TreeNode*>(rootNode()), visitor);
 }
 
 uint16_t Tree::getUID()

@@ -2,7 +2,6 @@
 #include "crossdoor_nodes.h"
 #include "behaviortree_cpp/bt_factory.h"
 #include "behaviortree_cpp/loggers/groot2_publisher.h"
-#include "behaviortree_cpp/loggers/bt_sqlite_logger.h"
 #include "behaviortree_cpp/xml_parsing.h"
 #include "behaviortree_cpp/json_export.h"
 
@@ -98,7 +97,7 @@ int main()
   // Groot2 editor requires a model of your registered Nodes.
   // You don't need to write that by hand, it can be automatically
   // generated using the following command.
-  std::string xml_models = BT::writeTreeNodesModelXML(factory);
+  const std::string xml_models = BT::writeTreeNodesModelXML(factory);
 
   factory.registerBehaviorTreeFromText(xml_text);
 
@@ -119,11 +118,8 @@ int main()
   // Add two more loggers, to save the transitions into a file.
   // Both formats are compatible with Groot2
 
-  // Lightweight serialization
+  // Logging with lightweight serialization
   BT::FileLogger2 logger2(tree, "t12_logger2.btlog");
-  // SQLite logger can save multiple sessions into the same database
-  bool append_to_database = true;
-  BT::SqliteLogger sqlite_logger(tree, "t12_sqlitelog.db3", append_to_database);
 
   while(1)
   {

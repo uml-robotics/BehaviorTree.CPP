@@ -34,8 +34,7 @@
 #include "behaviortree_cpp/decorators/run_once_node.h"
 #include "behaviortree_cpp/decorators/subtree_node.h"
 #include "behaviortree_cpp/decorators/loop_node.h"
-#include "behaviortree_cpp/decorators/skip_unless_updated.h"
-#include "behaviortree_cpp/decorators/wait_update.h"
+#include "behaviortree_cpp/decorators/updated_decorator.h"
 
 #include "behaviortree_cpp/actions/always_success_node.h"
 #include "behaviortree_cpp/actions/always_failure_node.h"
@@ -45,6 +44,7 @@
 #include "behaviortree_cpp/actions/test_node.h"
 #include "behaviortree_cpp/actions/sleep_node.h"
 #include "behaviortree_cpp/actions/unset_blackboard_node.h"
+#include "behaviortree_cpp/actions/updated_action.h"
 
 #include "behaviortree_cpp/decorators/force_success_node.h"
 #include "behaviortree_cpp/decorators/force_failure_node.h"

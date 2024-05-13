@@ -336,11 +336,11 @@ using Result = Expected<std::monostate>;
 
 struct Timestamp
 {
+  // Number being incremented every time a new value is written
   uint64_t seq = 0;
-  std::chrono::nanoseconds stamp = std::chrono::nanoseconds(0);
+  // Last update time. Nanoseconds since epoch
+  std::chrono::nanoseconds time = std::chrono::nanoseconds(0);
 };
-
-using ResultStamped = Expected<Timestamp>;
 
 [[nodiscard]] bool IsAllowedPortName(StringView str);
 

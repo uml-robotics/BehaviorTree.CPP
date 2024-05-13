@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16.3) # version on Ubuntu Focal
 
-project(behaviortree_cpp VERSION 4.5.2 LANGUAGES C CXX)
+project(behaviortree_cpp VERSION 4.6.0 LANGUAGES C CXX)
 
 set(CMAKE_CONFIG_PATH ${CMAKE_MODULE_PATH}  "${CMAKE_CURRENT_LIST_DIR}/cmake")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CONFIG_PATH}")
@@ -99,15 +99,15 @@ list(APPEND BT_SOURCE
 
     src/actions/test_node.cpp
     src/actions/sleep_node.cpp
+    src/actions/updated_action.cpp
 
     src/decorators/delay_node.cpp
     src/decorators/inverter_node.cpp
     src/decorators/repeat_node.cpp
     src/decorators/retry_node.cpp
-    src/decorators/timeout_node.cpp
-    src/decorators/skip_unless_updated.cpp
     src/decorators/subtree_node.cpp
-    src/decorators/wait_update.cpp
+    src/decorators/timeout_node.cpp
+    src/decorators/updated_decorator.cpp
 
     src/controls/if_then_else_node.cpp
     src/controls/fallback_node.cpp
@@ -189,6 +189,8 @@ if(MSVC)
 else()
     target_compile_options(${BTCPP_LIBRARY} PRIVATE -Wall -Wextra)
 endif()
+
+add_library(BT::${BTCPP_LIBRARY} ALIAS ${BTCPP_LIBRARY})
 
 #############################################################
 message( STATUS "BTCPP_LIB_DESTINATION:   ${BTCPP_LIB_DESTINATION} " )
