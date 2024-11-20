@@ -2,6 +2,29 @@
 Changelog for package behaviortree_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.6.2 (2024-06-26)
+------------------
+* Initialize template variable `T out` (`#839 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/839>`_)
+* Building with a recent compiler fails due incompatible expected library (`#833 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/833>`_)
+  * nonstd::expected updated to 0.8
+* fix issue `#829 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/829>`_: support again custom JSON converters
+* fix issue `#834 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/834>`_: enable minitrace
+* allow multiple instances of the loggers
+* fix issue `#827 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/827>`_ : verify <BehaviorTree> name
+* add TickMonitorCallback
+* Fix typo in FallbackNode constructor parameter name (`#830 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/830>`_)
+* fix segfault and throw instead when manifest is nullptr
+* Add in call to ament_export_targets. (`#826 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/826>`_)
+* Contributors: Davide Faconti, S. Messerschmidt, Sharmin Ramli, avikus-seonghyeon.kwon
+
+4.6.1 (2024-05-20)
+------------------
+* remove flatbuffers from public API and old file_logger
+* fix issue `#824 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/824>`_: use global in Blackboard::set
+* Add test for setting a global blackboard entry using a node's output port `#823 <https://github.com/BehaviorTree/BehaviorTree.CPP/issues/823>`_
+* examples renamed
+* Contributors: Davide Faconti, Robin Müller
+
 4.6.0 (2024-04-28)
 ------------------
 * add tutorial 19 about the global blackboard

@@ -166,6 +166,8 @@ public:
 
   using PreTickCallback = std::function<NodeStatus(TreeNode&)>;
   using PostTickCallback = std::function<NodeStatus(TreeNode&, NodeStatus)>;
+  using TickMonitorCallback =
+      std::function<void(TreeNode&, NodeStatus, std::chrono::microseconds)>;
 
   /**
      * @brief subscribeToStatusChange is used to attach a callback to a status change.
@@ -181,9 +183,9 @@ public:
 
   /** This method attaches to the TreeNode a callback with signature:
      *
-     *     Optional<NodeStatus> myCallback(TreeNode& node)
+     *     NodeStatus callback(TreeNode& node)
      *
-     * This callback is executed BEFORE the tick() and, if it returns a valid Optional<NodeStatus>,
+     * This callback is executed BEFORE the tick() and, if it returns SUCCESS or FAILURE,
      * the actual tick() will NOT be executed and this result will be returned instead.
      *
      * This is useful to inject a "dummy" implementation of the TreeNode at run-time
@@ -193,12 +195,22 @@ public:
   /**
    * This method attaches to the TreeNode a callback with signature:
    *
-   *     Optional<NodeStatus> myCallback(TreeNode& node, NodeStatus new_status)
+   *     NodeStatus myCallback(TreeNode& node, NodeStatus status)
    *
-   * This callback is executed AFTER the tick() and, if it returns a valid Optional<NodeStatus>,
+   * This callback is executed AFTER the tick() and, if it returns SUCCESS or FAILURE,
    * the value returned by the actual tick() is overriden with this one.
    */
   void setPostTickFunction(PostTickCallback callback);
+
+  /**
+   * This method attaches to the TreeNode a callback with signature:
+   *
+   *     void myCallback(TreeNode& node, NodeStatus status, std::chrono::microseconds duration)
+   *
+   * This callback is executed AFTER the tick() and will inform the user about its status and
+   * the execution time. Works only if the tick was not substituted by a pre-condition.
+   */
+  void setTickMonitorCallback(TickMonitorCallback callback);
 
   /// The unique identifier of this instance of treeNode.
   /// It is assigneld by the factory
@@ -246,7 +258,7 @@ public:
   template <typename T>
   [[nodiscard]] Expected<T> getInput(const std::string& key) const
   {
-    T out;
+    T out{};
     auto res = getInput(key, out);
     return (res) ? Expected<T>(out) : nonstd::make_unexpected(res.error());
   }
@@ -456,6 +468,13 @@ inline Expected<Timestamp> TreeNode::getInputStamped(const std::string& key,
   if(input_port_it != config().input_ports.end())
   {
     port_value_str = input_port_it->second;
+  }
+  else if(!config().manifest)
+  {
+    return nonstd::make_unexpected(StrCat("getInput() of node '", fullPath(),
+                                          "' failed because the manifest is "
+                                          "nullptr (WTF?) and the key: [",
+                                          key, "] is missing"));
   }
   else
   {

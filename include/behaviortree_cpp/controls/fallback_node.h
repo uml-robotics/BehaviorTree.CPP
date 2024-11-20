@@ -32,7 +32,7 @@ namespace BT
 class FallbackNode : public ControlNode
 {
 public:
-  FallbackNode(const std::string& name, bool make_aynch = false);
+  FallbackNode(const std::string& name, bool make_asynch = false);
 
   virtual ~FallbackNode() override = default;
 
@@ -40,7 +40,7 @@ public:
 
 private:
   size_t current_child_idx_;
-  bool all_skipped_ = true;
+  size_t skipped_count_ = 0;
   bool asynch_ = false;
 
   virtual BT::NodeStatus tick() override;
