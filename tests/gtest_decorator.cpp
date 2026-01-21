@@ -10,10 +10,12 @@
 *   WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <gtest/gtest.h>
 #include "action_test_node.h"
-#include "behaviortree_cpp/bt_factory.h"
 #include "test_helper.hpp"
+
+#include "behaviortree_cpp/bt_factory.h"
+
+#include <gtest/gtest.h>
 
 using BT::NodeStatus;
 using std::chrono::milliseconds;
@@ -68,8 +70,8 @@ struct RetryTest : testing::Test
 
 struct TimeoutAndRetry : testing::Test
 {
-  BT::TimeoutNode timeout_root;
   BT::RetryNode retry;
+  BT::TimeoutNode timeout_root;
   BT::SyncActionTest action;
 
   TimeoutAndRetry() : timeout_root("deadline", 9), retry("retry", 1000), action("action")
@@ -213,8 +215,8 @@ TEST(Decorator, RunOnce)
     NodeStatus status = tree.tickWhileRunning();
     ASSERT_EQ(status, NodeStatus::SUCCESS);
   }
-  // counters[0] contains the number ot times TestA was ticked
+  // counters[0] contains the number of times TestA was ticked
   ASSERT_EQ(counters[0], 1);
-  // counters[1] contains the number ot times TestB was ticked
+  // counters[1] contains the number of times TestB was ticked
   ASSERT_EQ(counters[1], 5);
 }

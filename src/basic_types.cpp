@@ -1,10 +1,15 @@
 #include "behaviortree_cpp/basic_types.h"
-#include "behaviortree_cpp/json_export.h"
 
+#include "behaviortree_cpp/json_export.h"
+#include "behaviortree_cpp/tree_node.h"
+
+#include <algorithm>
+#include <array>
+#include <charconv>
+#include <clocale>
 #include <cstdlib>
 #include <cstring>
-#include <clocale>
-#include <charconv>
+#include <tuple>
 
 namespace BT
 {
@@ -45,31 +50,28 @@ std::string toStr(NodeStatus status, bool colored)
   {
     return toStr(status);
   }
-  else
+  switch(status)
   {
-    switch(status)
-    {
-      case NodeStatus::SUCCESS:
-        return "\x1b[32m"
-               "SUCCESS"
-               "\x1b[0m";  // RED
-      case NodeStatus::FAILURE:
-        return "\x1b[31m"
-               "FAILURE"
-               "\x1b[0m";  // GREEN
-      case NodeStatus::RUNNING:
-        return "\x1b[33m"
-               "RUNNING"
-               "\x1b[0m";  // YELLOW
-      case NodeStatus::SKIPPED:
-        return "\x1b[34m"
-               "SKIPPED"
-               "\x1b[0m";  // BLUE
-      case NodeStatus::IDLE:
-        return "\x1b[36m"
-               "IDLE"
-               "\x1b[0m";  // CYAN
-    }
+    case NodeStatus::SUCCESS:
+      return "\x1b[32m"
+             "SUCCESS"
+             "\x1b[0m";  // GREEN
+    case NodeStatus::FAILURE:
+      return "\x1b[31m"
+             "FAILURE"
+             "\x1b[0m";  // RED
+    case NodeStatus::RUNNING:
+      return "\x1b[33m"
+             "RUNNING"
+             "\x1b[0m";  // YELLOW
+    case NodeStatus::SKIPPED:
+      return "\x1b[34m"
+             "SKIPPED"
+             "\x1b[0m";  // BLUE
+    case NodeStatus::IDLE:
+      return "\x1b[36m"
+             "IDLE"
+             "\x1b[0m";  // CYAN
   }
   return "Undefined";
 }
@@ -119,7 +121,8 @@ template <>
 int64_t convertFromString<int64_t>(StringView str)
 {
   long result = 0;
-  auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), result);
+  const auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), result);
+  std::ignore = ptr;
   if(ec != std::errc())
   {
     throw RuntimeError(StrCat("Can't convert string [", str, "] to integer"));
@@ -131,7 +134,8 @@ template <>
 uint64_t convertFromString<uint64_t>(StringView str)
 {
   unsigned long result = 0;
-  auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), result);
+  const auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), result);
+  std::ignore = ptr;
   if(ec != std::errc())
   {
     throw RuntimeError(StrCat("Can't convert string [", str, "] to integer"));
@@ -139,6 +143,8 @@ uint64_t convertFromString<uint64_t>(StringView str)
   return result;
 }
 
+namespace
+{
 template <typename T>
 T ConvertWithBoundCheck(StringView str)
 {
@@ -150,6 +156,7 @@ T ConvertWithBoundCheck(StringView str)
   }
   return res;
 }
+}  // namespace
 
 template <>
 int8_t convertFromString<int8_t>(StringView str)
@@ -193,21 +200,23 @@ double convertFromString<double>(StringView str)
   // see issue #120
   // http://quick-bench.com/DWaXRWnxtxvwIMvZy2DxVPEKJnE
 
-  std::string old_locale = setlocale(LC_NUMERIC, nullptr);
-  setlocale(LC_NUMERIC, "C");
-  double val = std::stod(str.data());
-  setlocale(LC_NUMERIC, old_locale.c_str());
+  const std::string old_locale = setlocale(LC_NUMERIC, nullptr);
+  std::ignore = setlocale(LC_NUMERIC, "C");
+  const std::string str_copy(str.data(), str.size());
+  const double val = std::stod(str_copy);
+  std::ignore = setlocale(LC_NUMERIC, old_locale.c_str());
   return val;
 }
 
 template <>
 float convertFromString<float>(StringView str)
 {
-  std::string old_locale = setlocale(LC_NUMERIC, nullptr);
-  setlocale(LC_NUMERIC, "C");
-  float val = std::stof(str.data());
-  setlocale(LC_NUMERIC, old_locale.c_str());
-  return val;
+  const std::string old_locale = setlocale(LC_NUMERIC, nullptr);
+  std::ignore = setlocale(LC_NUMERIC, "C");
+  const std::string str_copy(str.data(), str.size());
+  const double val = std::stod(str_copy);
+  std::ignore = setlocale(LC_NUMERIC, old_locale.c_str());
+  return static_cast<float>(val);
 }
 
 template <>
@@ -232,6 +241,19 @@ std::vector<double> convertFromString<std::vector<double>>(StringView str)
   for(const StringView& part : parts)
   {
     output.push_back(convertFromString<double>(part));
+  }
+  return output;
+}
+
+template <>
+std::vector<bool> convertFromString<std::vector<bool>>(StringView str)
+{
+  auto parts = splitString(str, ';');
+  std::vector<bool> output;
+  output.reserve(parts.size());
+  for(const StringView& part : parts)
+  {
+    output.push_back(convertFromString<bool>(part));
   }
   return output;
 }
@@ -420,29 +442,76 @@ const std::string& PortInfo::defaultValueString() const
 
 bool IsAllowedPortName(StringView str)
 {
-  if(str == "_autoremap")
-  {
-    return true;
-  }
   if(str.empty())
   {
     return false;
   }
   const char first_char = str.data()[0];
-  if(!std::isalpha(first_char))
+  // Port name cannot start with a digit
+  if(std::isalpha(static_cast<unsigned char>(first_char)) == 0)
   {
     return false;
   }
-  if(str == "name" || str == "ID" || str == "description")
+  // Check for forbidden characters
+  if(findForbiddenChar(str) != '\0')
   {
     return false;
   }
-  return true;
+  return !IsReservedAttribute(str);
+}
+
+bool IsReservedAttribute(StringView str)
+{
+  for(const auto& name : PreCondNames)
+  {
+    if(name == str)
+    {
+      return true;
+    }
+  }
+  for(const auto& name : PostCondNames)
+  {
+    if(name == str)
+    {
+      return true;
+    }
+  }
+  return str == "name" || str == "ID"  || str == "description" || str == "_autoremap";
+}
+
+char findForbiddenChar(StringView name)
+{
+  // Forbidden characters that break XML serialization or cause filesystem issues
+  static constexpr std::array<char, 16> kForbiddenChars = {
+    ' ', '\t', '\n', '\r', '<', '>', '&', '"', '\'', '/', '\\', ':', '*', '?', '|', '.'
+  };
+
+  for(const char c : name)
+  {
+    const auto uc = static_cast<unsigned char>(c);
+    // Allow UTF-8 multibyte sequences (high bit set)
+    if(uc >= 0x80)
+    {
+      continue;
+    }
+    // Block control characters (ASCII 0-31 and 127)
+    if(uc < 32 || uc == 127)
+    {
+      return c;
+    }
+    // Check forbidden character list
+    if(std::find(kForbiddenChars.begin(), kForbiddenChars.end(), c) !=
+       kForbiddenChars.end())
+    {
+      return c;
+    }
+  }
+  return '\0';
 }
 
 Any convertFromJSON(StringView json_text, std::type_index type)
 {
-  nlohmann::json json = nlohmann::json::parse(json_text);
+  const nlohmann::json json = nlohmann::json::parse(json_text);
   auto res = JsonExporter::get().fromJson(json, type);
   if(!res)
   {
@@ -463,8 +532,18 @@ Expected<std::string> toJsonString(const Any& value)
 
 bool StartWith(StringView str, StringView prefix)
 {
-  return str.size() >= prefix.size() &&
-         strncmp(str.data(), prefix.data(), prefix.size()) == 0;
+  if(str.size() < prefix.size())
+  {
+    return false;
+  }
+  for(size_t i = 0; i < prefix.size(); ++i)
+  {
+    if(str[i] != prefix[i])
+    {
+      return false;
+    }
+  }
+  return true;
 }
 
 bool StartWith(StringView str, char prefix)

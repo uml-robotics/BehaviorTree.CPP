@@ -1,5 +1,5 @@
 /* Copyright (C) 2015-2018 Michele Colledanchise -  All Rights Reserved
- * Copyright (C) 2018-2020 Davide Faconti, Eurecat -  All Rights Reserved
+ * Copyright (C) 2018-2025 Davide Faconti, Eurecat -  All Rights Reserved
 *
 *   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
 *   to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -25,7 +25,7 @@ NodeStatus SequenceWithMemory::tick()
 {
   const size_t children_count = children_nodes_.size();
 
-  if(status() == NodeStatus::IDLE)
+  if(!isStatusActive(status()))
   {
     skipped_count_ = 0;
   }
@@ -55,7 +55,7 @@ NodeStatus SequenceWithMemory::tick()
       case NodeStatus::SUCCESS: {
         current_child_idx_++;
         // Return the execution flow if the child is async,
-        // to make this interruptable.
+        // to make this interruptible.
         if(requiresWakeUp() && prev_status == NodeStatus::IDLE &&
            current_child_idx_ < children_count)
         {
@@ -79,13 +79,15 @@ NodeStatus SequenceWithMemory::tick()
   }    // end while loop
 
   // The entire while loop completed. This means that all the children returned SUCCESS.
+  const bool all_children_skipped = (skipped_count_ == children_count);
   if(current_child_idx_ == children_count)
   {
     resetChildren();
     current_child_idx_ = 0;
+    skipped_count_ = 0;
   }
   // Skip if ALL the nodes have been skipped
-  return (skipped_count_ == children_count) ? NodeStatus::SKIPPED : NodeStatus::SUCCESS;
+  return (all_children_skipped) ? NodeStatus::SKIPPED : NodeStatus::SUCCESS;
 }
 
 void SequenceWithMemory::halt()

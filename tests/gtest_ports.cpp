@@ -1,7 +1,9 @@
-#include <gtest/gtest.h>
+#include "behaviortree_cpp/basic_types.h"
 #include "behaviortree_cpp/bt_factory.h"
-#include "behaviortree_cpp/xml_parsing.h"
 #include "behaviortree_cpp/json_export.h"
+#include "behaviortree_cpp/xml_parsing.h"
+
+#include <gtest/gtest.h>
 
 using namespace BT;
 
@@ -129,6 +131,30 @@ TEST(PortTest, Descriptions)
   ASSERT_EQ(status, NodeStatus::FAILURE);  // failure because in_port_B="99"
 }
 
+TEST(PortsTest, NonPorts)
+{
+  std::string xml_txt =
+      R"(
+    <root BTCPP_format="4" >
+        <BehaviorTree ID="MainTree">
+            <Action ID="NodeWithPorts" name="NodeWithPortsName" in_port_B="66" _not_da_port="whateva" _skipIf="true" />
+        </BehaviorTree>
+    </root>)";
+
+  BehaviorTreeFactory factory;
+  factory.registerNodeType<NodeWithPorts>("NodeWithPorts");
+
+  auto tree = factory.createTreeFromText(xml_txt);
+
+  const TreeNode* root = tree.rootNode();
+  ASSERT_NE(root, nullptr);
+  ASSERT_EQ(root->type(), NodeType::ACTION);
+
+  EXPECT_EQ(root->config().other_attributes.size(), 1);
+  ASSERT_EQ(root->config().other_attributes.count("_not_da_port"), 1);
+  EXPECT_EQ(root->config().other_attributes.at("_not_da_port"), "whateva");
+}
+
 struct MyType
 {
   std::string value;
@@ -197,82 +223,6 @@ TEST(PortTest, EmptyPort)
   NodeStatus status = tree.tickWhileRunning();
   // expect failure because port is not set yet
   ASSERT_EQ(status, NodeStatus::FAILURE);
-}
-
-class IllegalPorts : public SyncActionNode
-{
-public:
-  IllegalPorts(const std::string& name, const NodeConfig& config)
-    : SyncActionNode(name, config)
-  {}
-
-  NodeStatus tick() override
-  {
-    return NodeStatus::SUCCESS;
-  }
-
-  static PortsList providedPorts()
-  {
-    return { BT::InputPort<std::string>("name") };
-  }
-};
-
-TEST(PortTest, IllegalPorts)
-{
-  BehaviorTreeFactory factory;
-  ASSERT_ANY_THROW(factory.registerNodeType<IllegalPorts>("nope"));
-}
-
-class ActionVectorDoubleIn : public SyncActionNode
-{
-public:
-  ActionVectorDoubleIn(const std::string& name, const NodeConfig& config,
-                       std::vector<double>* states)
-    : SyncActionNode(name, config), states_(states)
-  {}
-
-  NodeStatus tick() override
-  {
-    getInput("states", *states_);
-    return NodeStatus::SUCCESS;
-  }
-
-  static PortsList providedPorts()
-  {
-    return { BT::InputPort<std::vector<double>>("states") };
-  }
-
-private:
-  std::vector<double>* states_;
-};
-
-TEST(PortTest, SubtreeStringInput_Issue489)
-{
-  std::string xml_txt = R"(
-    <root BTCPP_format="4" >
-      <BehaviorTree ID="Main">
-        <SubTree ID="Subtree_A" states="3;7"/>
-      </BehaviorTree>
-
-      <BehaviorTree ID="Subtree_A">
-        <ActionVectorDoubleIn states="{states}"/>
-      </BehaviorTree>
-    </root>)";
-
-  std::vector<double> states;
-
-  BehaviorTreeFactory factory;
-  factory.registerNodeType<ActionVectorDoubleIn>("ActionVectorDoubleIn", &states);
-
-  factory.registerBehaviorTreeFromText(xml_txt);
-  auto tree = factory.createTree("Main");
-
-  NodeStatus status = tree.tickWhileRunning();
-
-  ASSERT_EQ(status, NodeStatus::SUCCESS);
-  ASSERT_EQ(2, states.size());
-  ASSERT_EQ(3, states[0]);
-  ASSERT_EQ(7, states[1]);
 }
 
 class ActionVectorStringIn : public SyncActionNode
@@ -422,81 +372,7 @@ TEST(PortTest, DefaultInput)
   ASSERT_EQ(status, NodeStatus::SUCCESS);
 }
 
-class GetAny : public SyncActionNode
-{
-public:
-  GetAny(const std::string& name, const NodeConfig& config) : SyncActionNode(name, config)
-  {}
-
-  NodeStatus tick() override
-  {
-    // case 1: the port is Any, but we can cast dirrectly to string
-    auto res_str = getInput<std::string>("val_str");
-    // case 2: the port is Any, and we retrieve an Any (to be casted later)
-    auto res_int = getInput<BT::Any>("val_int");
-
-    // case 3: port is double and we get a double
-    auto res_real_A = getInput<double>("val_real");
-    // case 4: port is double and we get an Any
-    auto res_real_B = getInput<BT::Any>("val_real");
-
-    bool expected = res_str.value() == "hello" && res_int->cast<int>() == 42 &&
-                    res_real_A.value() == 3.14 && res_real_B->cast<double>() == 3.14;
-
-    return expected ? NodeStatus::SUCCESS : NodeStatus::FAILURE;
-  }
-
-  static PortsList providedPorts()
-  {
-    return { BT::InputPort<BT::Any>("val_str"), BT::InputPort<BT::Any>("val_int"),
-             BT::InputPort<double>("val_real") };
-  }
-};
-
-class SetAny : public SyncActionNode
-{
-public:
-  SetAny(const std::string& name, const NodeConfig& config) : SyncActionNode(name, config)
-  {}
-
-  NodeStatus tick() override
-  {
-    // check that the port can contain different types
-    setOutput("val_str", BT::Any(1.0));
-    setOutput("val_str", BT::Any(1));
-    setOutput("val_str", BT::Any("hello"));
-
-    setOutput("val_int", 42);
-    setOutput("val_real", 3.14);
-    return NodeStatus::SUCCESS;
-  }
-
-  static PortsList providedPorts()
-  {
-    return { BT::OutputPort<BT::Any>("val_str"), BT::OutputPort<int>("val_int"),
-             BT::OutputPort<BT::Any>("val_real") };
-  }
-};
-
-TEST(PortTest, AnyPort)
-{
-  std::string xml_txt = R"(
-    <root BTCPP_format="4" >
-      <BehaviorTree>
-        <Sequence>
-          <SetAny val_str="{val_str}" val_int="{val_int}" val_real="{val_real}"/>
-          <GetAny val_str="{val_str}" val_int="{val_int}" val_real="{val_real}"/>
-        </Sequence>
-      </BehaviorTree>
-    </root>)";
-
-  BehaviorTreeFactory factory;
-  factory.registerNodeType<SetAny>("SetAny");
-  factory.registerNodeType<GetAny>("GetAny");
-  auto tree = factory.createTreeFromText(xml_txt);
-  auto status = tree.tickOnce();
-  ASSERT_EQ(status, NodeStatus::SUCCESS);
-}
+// NOTE: GetAny, SetAny classes and AnyPort test moved to gtest_port_type_rules.cpp
 
 class NodeWithDefaultPoints : public SyncActionNode
 {

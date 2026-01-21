@@ -1,8 +1,11 @@
-#include <gtest/gtest.h>
-#include <string>
+#include "test_helper.hpp"
+
 #include "behaviortree_cpp/basic_types.h"
 #include "behaviortree_cpp/bt_factory.h"
-#include "test_helper.hpp"
+
+#include <string>
+
+#include <gtest/gtest.h>
 
 using namespace BT;
 
@@ -105,6 +108,111 @@ TEST(PreconditionsDecorator, StringEquals)
   ASSERT_EQ(status, NodeStatus::SUCCESS);
   ASSERT_EQ(counters[0], 0);
   ASSERT_EQ(counters[1], 1);
+}
+
+class KeepRunning : public BT::StatefulActionNode
+{
+public:
+  KeepRunning(const std::string& name, const BT::NodeConfig& config)
+    : BT::StatefulActionNode(name, config)
+  {}
+
+  static BT::PortsList providedPorts()
+  {
+    return {};
+  }
+
+  BT::NodeStatus onStart() override
+  {
+    return BT::NodeStatus::RUNNING;
+  }
+
+  BT::NodeStatus onRunning() override
+  {
+    return BT::NodeStatus::RUNNING;
+  }
+
+  void onHalted() override
+  {
+    std::cout << "Node halted\n";
+  }
+};
+
+TEST(PreconditionsDecorator, ChecksConditionOnce)
+{
+  BehaviorTreeFactory factory;
+  factory.registerNodeType<KeepRunning>("KeepRunning");
+
+  const std::string xml_text = R"(
+
+    <root BTCPP_format="4" >
+        <BehaviorTree ID="MainTree">
+            <Sequence>
+                <Script code = "A:=0" />
+                <Script code = "B:=0" />
+                <Precondition if=" A==0 " else="FAILURE">
+                    <KeepRunning _while="B==0" />
+                </Precondition>
+            </Sequence>
+        </BehaviorTree>
+    </root>)";
+
+  auto tree = factory.createTreeFromText(xml_text);
+
+  EXPECT_EQ(tree.tickOnce(), NodeStatus::RUNNING);
+  // While the child is still running, attempt to fail the precondition.
+  tree.rootBlackboard()->set("A", 1);
+  EXPECT_EQ(tree.tickOnce(), NodeStatus::RUNNING);
+  // Finish running the tree, the else condition should not be hit.
+  tree.rootBlackboard()->set("B", 1);
+  EXPECT_EQ(tree.tickOnce(), NodeStatus::SUCCESS);
+}
+
+TEST(PreconditionsDecorator, CanRunChildrenMultipleTimes)
+{
+  BehaviorTreeFactory factory;
+  factory.registerNodeType<KeepRunning>("KeepRunning");
+  std::array<int, 1> counters;
+  RegisterTestTick(factory, "Test", counters);
+
+  const std::string xml_text = R"(
+
+    <root BTCPP_format="4" >
+        <BehaviorTree ID="MainTree">
+            <Sequence>
+                <Script code = "A:=0" />
+                <Script code = "B:=0" />
+                <Script code = "C:=1" />
+                <Repeat num_cycles="3">
+                    <Sequence>
+                        <Precondition if=" A==0 " else="SUCCESS">
+                            <TestA/>
+                        </Precondition>
+                        <KeepRunning _while="C==0" />
+                        <KeepRunning _while="B==0" />
+                    </Sequence>
+                </Repeat>
+            </Sequence>
+        </BehaviorTree>
+    </root>)";
+
+  auto tree = factory.createTreeFromText(xml_text);
+
+  EXPECT_EQ(tree.tickOnce(), NodeStatus::RUNNING);
+  EXPECT_EQ(counters[0], 1);  // Precondition hit once;
+
+  // In the second repeat, fail the precondition
+  tree.rootBlackboard()->set("A", 1);
+  tree.rootBlackboard()->set("B", 1);
+  tree.rootBlackboard()->set("C", 0);
+  EXPECT_EQ(tree.tickOnce(), NodeStatus::RUNNING);
+  EXPECT_EQ(counters[0], 1);  // Precondition still only hit once.
+
+  // Finally in the last repeat, hit the condition again.
+  tree.rootBlackboard()->set("A", 0);
+  tree.rootBlackboard()->set("C", 1);
+  EXPECT_EQ(tree.tickOnce(), NodeStatus::SUCCESS);
+  EXPECT_EQ(counters[0], 2);  // Precondition hit twice now.
 }
 
 TEST(Preconditions, Basic)
@@ -246,34 +354,6 @@ TEST(Preconditions, Issue615_NoSkipWhenRunning_A)
   ASSERT_EQ(tree.tickOnce(), NodeStatus::RUNNING);
 }
 
-class KeepRunning : public BT::StatefulActionNode
-{
-public:
-  KeepRunning(const std::string& name, const BT::NodeConfig& config)
-    : BT::StatefulActionNode(name, config)
-  {}
-
-  static BT::PortsList providedPorts()
-  {
-    return {};
-  }
-
-  BT::NodeStatus onStart() override
-  {
-    return BT::NodeStatus::RUNNING;
-  }
-
-  BT::NodeStatus onRunning() override
-  {
-    return BT::NodeStatus::RUNNING;
-  }
-
-  void onHalted() override
-  {
-    std::cout << "Node halted\n";
-  }
-};
-
 TEST(Preconditions, Issue615_NoSkipWhenRunning_B)
 {
   static constexpr auto xml_text = R"(
@@ -396,4 +476,35 @@ TEST(Preconditions, WhileCallsOnHalt)
 
   ASSERT_EQ(status, BT::NodeStatus::SKIPPED);
   ASSERT_EQ(tree.rootBlackboard()->get<int>("B"), 69);
+}
+
+TEST(Preconditions, SkippedSequence)
+{
+  const std::string xml_text = R"(
+    <root BTCPP_format="4" >
+        <BehaviorTree ID="MainTree">
+            <Sequence>
+                <AlwaysSuccess _skipIf="skip"/>
+            </Sequence>
+        </BehaviorTree>
+    </root>)";
+
+  auto factory = BT::BehaviorTreeFactory();
+  auto tree = factory.createTreeFromText(xml_text);
+
+  tree.rootBlackboard()->set("skip", true);
+  auto status = tree.tickWhileRunning();
+  ASSERT_EQ(status, BT::NodeStatus::SKIPPED);
+
+  tree.rootBlackboard()->set("skip", false);
+  status = tree.tickWhileRunning();
+  ASSERT_EQ(status, BT::NodeStatus::SUCCESS);
+
+  tree.rootBlackboard()->set("skip", true);
+  status = tree.tickWhileRunning();
+  ASSERT_EQ(status, BT::NodeStatus::SKIPPED);
+
+  tree.rootBlackboard()->set("skip", false);
+  status = tree.tickWhileRunning();
+  ASSERT_EQ(status, BT::NodeStatus::SUCCESS);
 }

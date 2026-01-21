@@ -15,8 +15,10 @@ set(BT_TESTS
   gtest_parallel.cpp
   gtest_preconditions.cpp
   gtest_ports.cpp
+  gtest_port_type_rules.cpp
   gtest_postconditions.cpp
   gtest_match.cpp
+  gtest_name_validation.cpp
   gtest_json.cpp
   gtest_reactive.cpp
   gtest_reactive_backchaining.cpp
@@ -28,46 +30,46 @@ set(BT_TESTS
   gtest_tree.cpp
   gtest_updates.cpp
   gtest_wakeup.cpp
+  gtest_interface.cpp
+  gtest_simple_string.cpp
 
   script_parser_test.cpp
   test_helper.hpp
 )
 
-set(TEST_DEPENDECIES
-    ${BTCPP_LIBRARY}
-    foonathan::lexy
-    bt_sample_nodes)
-
-if(ament_cmake_FOUND AND BUILD_TESTING)
+if(ament_cmake_FOUND)
 
     find_package(ament_cmake_gtest REQUIRED)
 
-    ament_add_gtest(${BTCPP_LIBRARY}_test ${BT_TESTS})
-    target_link_libraries(${BTCPP_LIBRARY}_test
-        ${TEST_DEPENDECIES}
-        ${ament_LIBRARIES})
-
-elseif(catkin_FOUND AND CATKIN_ENABLE_TESTING)
-
-    catkin_add_gtest(${BTCPP_LIBRARY}_test ${BT_TESTS})
-    target_link_libraries(${BTCPP_LIBRARY}_test
-        ${TEST_DEPENDECIES}
-        Threads::Threads
-        ${catkin_LIBRARIES})
+    ament_add_gtest(behaviortree_cpp_test ${BT_TESTS})
+    target_link_libraries(behaviortree_cpp_test ${ament_LIBRARIES})
 
 else()
 
-    find_package(GTest REQUIRED)
     enable_testing()
 
-    add_executable(${BTCPP_LIBRARY}_test ${BT_TESTS})
+    find_package(GTest REQUIRED)
+    include(GoogleTest)
 
-    target_link_libraries(${PROJECT_NAME}_test
-        ${TEST_DEPENDECIES}
-        Threads::Threads
-        GTest::gtest)
+    add_executable(behaviortree_cpp_test ${BT_TESTS})
+
+    target_link_libraries(behaviortree_cpp_test
+        GTest::gtest
+        GTest::gtest_main)
+
+    # gtest_discover_tests queries the test executable for available tests and registers them on ctest individually
+    # On Windows it needs a little help to find the shared libraries
+    if(WIN32)
+        gtest_discover_tests(behaviortree_cpp_test
+            DISCOVERY_MODE PRE_TEST
+            DISCOVERY_ENVIRONMENT "PATH=$<TARGET_FILE_DIR:behaviortree_cpp_test>;$ENV{PATH}"
+        )
+    else()
+        gtest_discover_tests(behaviortree_cpp_test)
+    endif()
 
 endif()
 
-target_include_directories(${BTCPP_LIBRARY}_test PRIVATE include ${PROJECT_SOURCE_DIR}/3rdparty)
-target_compile_definitions(${BTCPP_LIBRARY}_test PRIVATE BT_TEST_FOLDER="${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(behaviortree_cpp_test PRIVATE include)
+target_link_libraries(behaviortree_cpp_test ${BTCPP_LIBRARY} bt_sample_nodes foonathan::lexy)
+target_compile_definitions(behaviortree_cpp_test PRIVATE BT_TEST_FOLDER="${CMAKE_CURRENT_SOURCE_DIR}")

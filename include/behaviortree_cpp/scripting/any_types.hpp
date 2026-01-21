@@ -1,4 +1,4 @@
-/*  Copyright (C) 2022-24 Davide Faconti -  All Rights Reserved
+/*  Copyright (C) 2022-2025 Davide Faconti -  All Rights Reserved
 *
 *   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
 *   to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -12,12 +12,12 @@
 
 #pragma once
 
+#include "behaviortree_cpp/utils/safe_any.hpp"
+
 #include "lexy/action/parse.hpp"
 #include "lexy/callback.hpp"
 #include "lexy/dsl.hpp"
 #include "lexy_ext/report_error.hpp"
-
-#include "behaviortree_cpp/utils/safe_any.hpp"
 
 namespace BT::Grammar
 {

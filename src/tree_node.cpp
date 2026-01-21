@@ -1,5 +1,5 @@
 /* Copyright (C) 2015-2018 Michele Colledanchise -  All Rights Reserved
- * Copyright (C) 2018-2022 Davide Faconti, Eurecat -  All Rights Reserved
+ * Copyright (C) 2018-2025 Davide Faconti, Eurecat -  All Rights Reserved
 *
 *   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
 *   to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -12,8 +12,9 @@
 */
 
 #include "behaviortree_cpp/tree_node.h"
-#include <cstring>
+
 #include <array>
+#include <cstring>
 
 namespace BT
 {
@@ -54,10 +55,8 @@ TreeNode::TreeNode(std::string name, NodeConfig config)
   : _p(new PImpl(std::move(name), std::move(config)))
 {}
 
-TreeNode::TreeNode(TreeNode&& other) noexcept
-{
-  this->_p = std::move(other._p);
-}
+TreeNode::TreeNode(TreeNode&& other) noexcept : _p(std::move(other._p))
+{}
 
 TreeNode& TreeNode::operator=(TreeNode&& other) noexcept
 {
@@ -65,8 +64,7 @@ TreeNode& TreeNode::operator=(TreeNode&& other) noexcept
   return *this;
 }
 
-TreeNode::~TreeNode()
-{}
+TreeNode::~TreeNode() = default;
 
 NodeStatus TreeNode::executeTick()
 {
@@ -75,7 +73,7 @@ NodeStatus TreeNode::executeTick()
   PostTickCallback post_tick;
   TickMonitorCallback monitor_tick;
   {
-    std::scoped_lock lk(_p->callback_injection_mutex);
+    const std::scoped_lock lk(_p->callback_injection_mutex);
     pre_tick = _p->pre_tick_callback;
     post_tick = _p->post_tick_callback;
     monitor_tick = _p->tick_monitor_callback;
@@ -106,19 +104,13 @@ NodeStatus TreeNode::executeTick()
     if(!substituted)
     {
       using namespace std::chrono;
-
-      auto t1 = steady_clock::now();
-      // trick to prevent the compile from reordering the order of execution. See #861
-      // This makes sure that the code is executed at the end of this scope
-      std::shared_ptr<void> execute_later(nullptr, [&](...) {
-        auto t2 = steady_clock::now();
-        if(monitor_tick)
-        {
-          monitor_tick(*this, new_status, duration_cast<microseconds>(t2 - t1));
-        }
-      });
-
+      const auto t1 = steady_clock::now();
       new_status = tick();
+      const auto t2 = steady_clock::now();
+      if(monitor_tick)
+      {
+        monitor_tick(*this, new_status, duration_cast<microseconds>(t2 - t1));
+      }
     }
   }
 
@@ -169,9 +161,9 @@ void TreeNode::setStatus(NodeStatus new_status)
       this->failed_ = true;
   }
 
-  NodeStatus prev_status;
+  NodeStatus prev_status = NodeStatus::IDLE;
   {
-    std::unique_lock<std::mutex> UniqueLock(_p->state_mutex);
+    const std::unique_lock<std::mutex> UniqueLock(_p->state_mutex);
     prev_status = _p->status;
     _p->status = new_status;
   }
@@ -206,7 +198,7 @@ Expected<NodeStatus> TreeNode::checkPreConditions()
       continue;
     }
 
-    const PreCond preID = PreCond(index);
+    const auto preID = static_cast<PreCond>(index);
 
     // Some preconditions are applied only when the node state is IDLE or SKIPPED
     if(_p->status == NodeStatus::IDLE || _p->status == NodeStatus::SKIPPED)
@@ -218,11 +210,11 @@ Expected<NodeStatus> TreeNode::checkPreConditions()
         {
           return NodeStatus::FAILURE;
         }
-        else if(preID == PreCond::SUCCESS_IF)
+        if(preID == PreCond::SUCCESS_IF)
         {
           return NodeStatus::SUCCESS;
         }
-        else if(preID == PreCond::SKIP_IF)
+        if(preID == PreCond::SKIP_IF)
         {
           return NodeStatus::SKIPPED;
         }
@@ -270,9 +262,9 @@ void TreeNode::checkPostConditions(NodeStatus status)
 
 void TreeNode::resetStatus()
 {
-  NodeStatus prev_status;
+  NodeStatus prev_status = NodeStatus::IDLE;
   {
-    std::unique_lock<std::mutex> lock(_p->state_mutex);
+    const std::unique_lock<std::mutex> lock(_p->state_mutex);
     prev_status = _p->status;
     _p->status = NodeStatus::IDLE;
   }
@@ -287,7 +279,7 @@ void TreeNode::resetStatus()
 
 NodeStatus TreeNode::status() const
 {
-  std::lock_guard<std::mutex> lock(_p->state_mutex);
+  const std::lock_guard<std::mutex> lock(_p->state_mutex);
   return _p->status;
 }
 
@@ -324,20 +316,20 @@ TreeNode::subscribeToStatusChange(TreeNode::StatusChangeCallback callback)
 
 void TreeNode::setPreTickFunction(PreTickCallback callback)
 {
-  std::unique_lock lk(_p->callback_injection_mutex);
-  _p->pre_tick_callback = callback;
+  const std::unique_lock lk(_p->callback_injection_mutex);
+  _p->pre_tick_callback = std::move(callback);
 }
 
 void TreeNode::setPostTickFunction(PostTickCallback callback)
 {
-  std::unique_lock lk(_p->callback_injection_mutex);
-  _p->post_tick_callback = callback;
+  const std::unique_lock lk(_p->callback_injection_mutex);
+  _p->post_tick_callback = std::move(callback);
 }
 
 void TreeNode::setTickMonitorCallback(TickMonitorCallback callback)
 {
-  std::unique_lock lk(_p->callback_injection_mutex);
-  _p->tick_monitor_callback = callback;
+  const std::unique_lock lk(_p->callback_injection_mutex);
+  _p->tick_monitor_callback = std::move(callback);
 }
 
 uint16_t TreeNode::UID() const
@@ -398,7 +390,7 @@ bool TreeNode::isBlackboardPointer(StringView str, StringView* stripped_pointer)
   }
   const auto size = (last_index - front_index) + 1;
   auto valid = size >= 3 && str[front_index] == '{' && str[last_index] == '}';
-  if(valid && stripped_pointer)
+  if(valid && stripped_pointer != nullptr)
   {
     *stripped_pointer = StringView(&str[front_index + 1], size - 2);
   }
@@ -471,39 +463,23 @@ void TreeNode::modifyPortsRemapping(const PortsRemapping& new_remapping)
 }
 
 template <>
-std::string toStr<PreCond>(const PreCond& pre)
+std::string toStr<PreCond>(const PreCond& cond)
 {
-  switch(pre)
+  if(cond < PreCond::COUNT_)
   {
-    case PreCond::SUCCESS_IF:
-      return "_successIf";
-    case PreCond::FAILURE_IF:
-      return "_failureIf";
-    case PreCond::SKIP_IF:
-      return "_skipIf";
-    case PreCond::WHILE_TRUE:
-      return "_while";
-    default:
-      return "Undefined";
+    return BT::PreCondNames[static_cast<size_t>(cond)];
   }
+  return "Undefined";
 }
 
 template <>
-std::string toStr<PostCond>(const PostCond& pre)
+std::string toStr<PostCond>(const PostCond& cond)
 {
-  switch(pre)
+  if(cond < BT::PostCond::COUNT_)
   {
-    case PostCond::ON_SUCCESS:
-      return "_onSuccess";
-    case PostCond::ON_FAILURE:
-      return "_onFailure";
-    case PostCond::ALWAYS:
-      return "_post";
-    case PostCond::ON_HALTED:
-      return "_onHalted";
-    default:
-      return "Undefined";
+    return BT::PostCondNames[static_cast<size_t>(cond)];
   }
+  return "Undefined";
 }
 
 AnyPtrLocked BT::TreeNode::getLockedPortContent(const std::string& key)

@@ -1,4 +1,4 @@
-/*  Copyright (C) 2018-2020 Davide Faconti, Eurecat -  All Rights Reserved
+/*  Copyright (C) 2018-2025 Davide Faconti, Eurecat -  All Rights Reserved
 *
 *   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
 *   to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -11,7 +11,6 @@
 */
 
 #include "behaviortree_cpp/behavior_tree.h"
-#include <cstring>
 
 namespace BT
 {
@@ -67,7 +66,7 @@ void applyRecursiveVisitorSelectively(TreeNode* node, const std::function<bool(T
 void applyRecursiveVisitor(const TreeNode* node,
                            const std::function<void(const TreeNode*)>& visitor)
 {
-  if(!node)
+  if(node == nullptr)
   {
     throw LogicError("One of the children of a DecoratorNode or ControlNode is nullptr");
   }
@@ -89,7 +88,7 @@ void applyRecursiveVisitor(const TreeNode* node,
 
 void applyRecursiveVisitor(TreeNode* node, const std::function<void(TreeNode*)>& visitor)
 {
-  if(!node)
+  if(node == nullptr)
   {
     throw LogicError("One of the children of a DecoratorNode or ControlNode is nullptr");
   }
@@ -105,7 +104,7 @@ void applyRecursiveVisitor(TreeNode* node, const std::function<void(TreeNode*)>&
   }
   else if(auto decorator = dynamic_cast<BT::DecoratorNode*>(node))
   {
-    if(decorator->child())
+    if(decorator->child() != nullptr)
     {
       applyRecursiveVisitor(decorator->child(), visitor);
     }
@@ -121,7 +120,7 @@ void printTreeRecursively(const TreeNode* root_node, std::ostream& stream)
     {
       stream << "   ";
     }
-    if(!node)
+    if(node == nullptr)
     {
       stream << "!nullptr!" << std::endl;
       return;
@@ -147,7 +146,7 @@ void printTreeRecursively(const TreeNode* root_node, std::ostream& stream)
   stream << "----------------" << std::endl;
 }
 
-void buildSerializedStatusSnapshot(TreeNode* root_node,
+void buildSerializedStatusSnapshot(const TreeNode* root_node,
                                    SerializedTreeStatus& serialized_buffer)
 {
   serialized_buffer.clear();

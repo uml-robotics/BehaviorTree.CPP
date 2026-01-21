@@ -1,16 +1,15 @@
 #pragma once
 
-#include <string>
-#include <memory>
-#include <unordered_map>
-#include <mutex>
-#include <optional>
-
 #include "behaviortree_cpp/basic_types.h"
 #include "behaviortree_cpp/contrib/json.hpp"
-#include "behaviortree_cpp/utils/safe_any.hpp"
 #include "behaviortree_cpp/exceptions.h"
 #include "behaviortree_cpp/utils/locked_reference.hpp"
+#include "behaviortree_cpp/utils/safe_any.hpp"
+
+#include <memory>
+#include <mutex>
+#include <string>
+#include <unordered_map>
 
 namespace BT
 {
@@ -41,6 +40,11 @@ protected:
   {}
 
 public:
+  Blackboard(const Blackboard&) = delete;
+  Blackboard& operator=(const Blackboard&) = delete;
+  Blackboard(Blackboard&&) = delete;
+  Blackboard& operator=(Blackboard&&) = delete;
+
   struct Entry
   {
     Any value;
@@ -55,7 +59,11 @@ public:
     Entry(const TypeInfo& _info) : info(_info)
     {}
 
-    Entry& operator=(const Entry& other);
+    ~Entry() = default;
+    Entry(const Entry&) = delete;
+    Entry& operator=(const Entry&) = delete;
+    Entry(Entry&&) = delete;
+    Entry& operator=(Entry&&) = delete;
   };
 
   /** Use this static method to create an instance of the BlackBoard
@@ -142,7 +150,7 @@ public:
   const Blackboard* rootBlackboard() const;
 
 private:
-  mutable std::mutex mutex_;
+  mutable std::mutex storage_mutex_;
   mutable std::recursive_mutex entry_mutex_;
   std::unordered_map<std::string, std::shared_ptr<Entry>> storage_;
   std::weak_ptr<Blackboard> parent_bb_;
@@ -187,7 +195,7 @@ inline T Blackboard::get(const std::string& key) const
 
 inline void Blackboard::unset(const std::string& key)
 {
-  std::unique_lock lock(mutex_);
+  std::unique_lock storage_lock(storage_mutex_);
 
   // check local storage
   auto it = storage_.find(key);
@@ -208,7 +216,7 @@ inline void Blackboard::set(const std::string& key, const T& value)
     rootBlackboard()->set(key.substr(1, key.size() - 1), value);
     return;
   }
-  std::unique_lock lock(mutex_);
+  std::unique_lock storage_lock(storage_mutex_);
 
   // check local storage
   auto it = storage_.find(key);
@@ -216,7 +224,7 @@ inline void Blackboard::set(const std::string& key, const T& value)
   {
     // create a new entry
     Any new_value(value);
-    lock.unlock();
+    storage_lock.unlock();
     std::shared_ptr<Blackboard::Entry> entry;
     // if a new generic port is created with a string, it's type should be AnyTypeAllowed
     if constexpr(std::is_same_v<std::string, T>)
@@ -229,7 +237,7 @@ inline void Blackboard::set(const std::string& key, const T& value)
                         GetAnyFromStringFunctor<T>());
       entry = createEntryImpl(key, new_port);
     }
-    lock.lock();
+    storage_lock.lock();
 
     entry->value = new_value;
     entry->sequence_id++;
@@ -240,6 +248,8 @@ inline void Blackboard::set(const std::string& key, const T& value)
     // this is not the first time we set this entry, we need to check
     // if the type is the same or not.
     Entry& entry = *it->second;
+    storage_lock.unlock();
+
     std::scoped_lock scoped_lock(entry.entry_mutex);
 
     Any& previous_any = entry.value;

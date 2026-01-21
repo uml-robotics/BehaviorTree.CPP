@@ -1,5 +1,6 @@
-#include "behaviortree_cpp/bt_factory.h"
 #include "dummy_nodes.h"
+
+#include "behaviortree_cpp/bt_factory.h"
 
 using namespace BT;
 
@@ -10,7 +11,7 @@ static const char* xml_text = R"(
         <Sequence>
             <Script code=" msg:='hello world' " />
             <Script code=" A:=THE_ANSWER; B:=3.14; color:=RED " />
-            <Precondition if="A>B && color != BLUE" else="FAILURE">
+            <Precondition if="A>-B && color != BLUE" else="FAILURE">
                 <Sequence>
                   <SaySomething message="{A}"/>
                   <SaySomething message="{B}"/>

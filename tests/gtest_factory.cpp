@@ -1,9 +1,12 @@
-#include <gtest/gtest.h>
+#include "behaviortree_cpp/xml_parsing.h"
+
 #include <filesystem>
 #include <string>
 #include <utility>
 #include <vector>
-#include "behaviortree_cpp/xml_parsing.h"
+
+#include <gtest/gtest.h>
+
 #include "../sample_nodes/crossdoor_nodes.h"
 #include "../sample_nodes/dummy_nodes.h"
 
@@ -82,7 +85,7 @@ static const char* xml_text_subtree_part1 = R"(
   <BehaviorTree ID="MainTree">
     <Fallback name="root_selector">
       <SubTree ID="DoorClosedSubtree" />
-      <Action ID="PassThroughWindow" />
+      <Action ID="PassThroughDoor" />
     </Fallback>
   </BehaviorTree>
 </root>  )";
@@ -93,16 +96,22 @@ static const char* xml_text_subtree_part2 = R"(
   <BehaviorTree ID="DoorClosedSubtree">
     <Sequence name="door_sequence">
       <Decorator ID="Inverter">
-        <Action ID="IsDoorLocked" />
+        <Action ID="IsDoorClosed" />
       </Decorator>
       <Action ID="OpenDoor" />
       <Action ID="PassThroughDoor" />
-      <Action ID="CloseDoor" />
     </Sequence>
   </BehaviorTree>
 </root>  )";
 
 // clang-format on
+
+TEST(BehaviorTreeFactory, NotRegisteredNode)
+{
+  BehaviorTreeFactory factory;
+  ASSERT_ANY_THROW(factory.createTreeFromText(xml_text));
+  ASSERT_ANY_THROW(std::make_shared<BT::Tree>(factory.createTreeFromText(xml_text)));
+}
 
 TEST(BehaviorTreeFactory, XMLParsingOrder)
 {

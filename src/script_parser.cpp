@@ -1,10 +1,11 @@
 #include "behaviortree_cpp/scripting/script_parser.hpp"
+
 #include "behaviortree_cpp/scripting/operators.hpp"
 
 #include <lexy/action/parse.hpp>
 #include <lexy/action/validate.hpp>
-#include <lexy_ext/report_error.hpp>
 #include <lexy/input/string_input.hpp>
+#include <lexy_ext/report_error.hpp>
 
 namespace BT
 {
@@ -13,16 +14,17 @@ using ErrorReport = lexy_ext::_report_error<char*>;
 
 Expected<ScriptFunction> ParseScript(const std::string& script)
 {
-  char error_msgs_buffer[2048];
+  std::string error_msgs_buffer;  // dynamically growing error buffer
 
   auto input = lexy::string_input<lexy::utf8_encoding>(script);
-  auto result =
-      lexy::parse<BT::Grammar::stmt>(input, ErrorReport().to(error_msgs_buffer));
+
+  auto reporter = ErrorReport().to(std::back_inserter(error_msgs_buffer));
+  auto result = lexy::parse<BT::Grammar::stmt>(input, reporter);
   if(result.has_value() && result.error_count() == 0)
   {
     try
     {
-      std::vector<BT::Ast::ExprBase::Ptr> exprs = LEXY_MOV(result).value();
+      const std::vector<BT::Ast::ExprBase::Ptr> exprs = LEXY_MOV(result).value();
       if(exprs.empty())
       {
         return nonstd::make_unexpected("Empty Script");
@@ -31,7 +33,7 @@ Expected<ScriptFunction> ParseScript(const std::string& script)
       return [exprs, script](Ast::Environment& env) -> Any {
         try
         {
-          for(auto i = 0u; i < exprs.size() - 1; ++i)
+          for(auto i = 0U; i < exprs.size() - 1; ++i)
           {
             exprs[i]->evaluate(env);
           }
@@ -48,10 +50,7 @@ Expected<ScriptFunction> ParseScript(const std::string& script)
       return nonstd::make_unexpected(err.what());
     }
   }
-  else
-  {
-    return nonstd::make_unexpected(error_msgs_buffer);
-  }
+  return nonstd::make_unexpected(error_msgs_buffer);
 }
 
 BT::Expected<Any> ParseScriptAndExecute(Ast::Environment& env, const std::string& script)
@@ -61,24 +60,23 @@ BT::Expected<Any> ParseScriptAndExecute(Ast::Environment& env, const std::string
   {
     return executor.value()(env);
   }
-  else  // forward the error
-  {
-    return nonstd::make_unexpected(executor.error());
-  }
+  // forward the error
+  return nonstd::make_unexpected(executor.error());
 }
 
 Result ValidateScript(const std::string& script)
 {
-  char error_msgs_buffer[2048];
+  std::string error_msgs_buffer;  // dynamically growing error buffer
 
   auto input = lexy::string_input<lexy::utf8_encoding>(script);
-  auto result =
-      lexy::parse<BT::Grammar::stmt>(input, ErrorReport().to(error_msgs_buffer));
+
+  auto reporter = ErrorReport().to(std::back_inserter(error_msgs_buffer));
+  auto result = lexy::parse<BT::Grammar::stmt>(input, reporter);
   if(result.has_value() && result.error_count() == 0)
   {
     try
     {
-      std::vector<BT::Ast::ExprBase::Ptr> exprs = LEXY_MOV(result).value();
+      const std::vector<BT::Ast::ExprBase::Ptr> exprs = LEXY_MOV(result).value();
       if(exprs.empty())
       {
         return nonstd::make_unexpected("Empty Script");
