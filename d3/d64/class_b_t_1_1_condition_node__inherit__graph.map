@@ -1,0 +1,9 @@
+<map id="BT::ConditionNode" name="BT::ConditionNode">
+<area shape="rect" id="node1" title="The ConditionNode is a leaf node used to check a condition." alt="" coords="263,152,405,177"/>
+<area shape="rect" id="node4" href="$db/dbb/class_b_t_1_1_assumption_checker_node.html" title=" " alt="" coords="28,225,237,251"/>
+<area shape="rect" id="node6" href="$da/d26/class_b_t_1_1_script_condition.html" title="Execute a script, and if the result is true, return SUCCESS, FAILURE otherwise." alt="" coords="261,225,407,251"/>
+<area shape="rect" id="node7" href="$dc/d49/class_b_t_1_1_simple_condition_node.html" title="The SimpleConditionNode provides an easy to use ConditionNode. The user should simply provide a callb..." alt="" coords="431,225,618,251"/>
+<area shape="rect" id="node2" href="$d1/de2/class_b_t_1_1_leaf_node.html" title=" " alt="" coords="280,79,388,104"/>
+<area shape="rect" id="node3" href="$da/d61/class_b_t_1_1_tree_node.html" title="Abstract base class for Behavior Tree Nodes." alt="" coords="281,5,387,31"/>
+<area shape="rect" id="node5" href="$dd/d51/class_b_t_1_1_simple_assumption_checker_node.html" title="The SimpleAssumptionCheckerNode provides an easy to use AssumptionCheckerNode. The user should simply..." alt="" coords="5,299,260,324"/>
+</map>

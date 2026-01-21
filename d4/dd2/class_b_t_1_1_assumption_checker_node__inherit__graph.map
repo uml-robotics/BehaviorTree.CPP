@@ -1,0 +1,7 @@
+<map id="BT::AssumptionCheckerNode" name="BT::AssumptionCheckerNode">
+<area shape="rect" id="node1" title=" " alt="" coords="28,225,237,251"/>
+<area shape="rect" id="node5" href="$dd/d51/class_b_t_1_1_simple_assumption_checker_node.html" title="The SimpleAssumptionCheckerNode provides an easy to use AssumptionCheckerNode. The user should simply..." alt="" coords="5,299,260,324"/>
+<area shape="rect" id="node2" href="$dc/dfc/class_b_t_1_1_condition_node.html" title="The ConditionNode is a leaf node used to check a condition." alt="" coords="61,152,204,177"/>
+<area shape="rect" id="node3" href="$d1/de2/class_b_t_1_1_leaf_node.html" title=" " alt="" coords="79,79,187,104"/>
+<area shape="rect" id="node4" href="$da/d61/class_b_t_1_1_tree_node.html" title="Abstract base class for Behavior Tree Nodes." alt="" coords="79,5,186,31"/>
+</map>
